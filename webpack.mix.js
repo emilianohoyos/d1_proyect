@@ -11,6 +11,10 @@ const mix = require('laravel-mix');
  |
  */
 
+// Compilar archivos de autenticación
+mix.js('resources/js/app.js', 'public/js')
+	.sass('resources/sass/app.scss', 'public/css');
+
 // app.min.css
 mix.sass('resources/scss/styles.scss', 'public/assets/css/app.min.css');
 
@@ -41,6 +45,7 @@ mix.combine([
 
 
 // plugins
+mix.copy('resources/js/demo', 'public/assets/js/demo/');
 mix.copy('node_modules/bootstrap/', 'public/assets/plugins/bootstrap/');
 mix.copy('node_modules/perfect-scrollbar/', 'public/assets/plugins/perfect-scrollbar/');
 mix.copy('node_modules/js-cookie/', 'public/assets/plugins/js-cookie/');
