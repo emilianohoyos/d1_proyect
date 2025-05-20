@@ -18,8 +18,8 @@ class CreateEmployeesTable extends Migration
             $table->string('cellphone', 45)->nullable();
             $table->string('address', 45)->nullable();
             $table->boolean('status')->nullable();
-            $table->foreignId('document_types_id')->constrained('document_types');
-            $table->foreignId('users_id')->constrained('users');
+            $table->foreignId('document_type_id')->constrained();
+            $table->foreignId('user_id')->constrained();
             $table->timestamps();
         });
     }

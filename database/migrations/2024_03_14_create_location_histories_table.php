@@ -13,10 +13,15 @@ return new class extends Migration
     {
         Schema::create('location_histories', function (Blueprint $table) {
             $table->id();
-            $table->string('latitude', 45)->nullable();
-            $table->string('longitude', 45)->nullable();
-            $table->timestamp('visit_date')->nullable();
-            $table->foreignId('employee_id')->constrained();
+            $table->foreignId('employees_id')->constrained('employees');
+            $table->string('latitude', 45);
+            $table->string('longitude', 45);
+            $table->string('accuracy', 45)->nullable();
+            $table->string('speed', 45)->nullable();
+            $table->string('heading', 45)->nullable();
+            $table->string('altitude', 45)->nullable();
+            $table->string('altitude_accuracy', 45)->nullable();
+            $table->string('timestamp', 45);
             $table->timestamps();
         });
     }
@@ -28,4 +33,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('location_histories');
     }
-};
+}; 

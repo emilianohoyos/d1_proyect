@@ -1,0 +1,234 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\RouteDetail;
+use App\Models\Employee;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class RouteApiController extends Controller
+{
+    /**
+     * Obtiene la programación actual del empleado
+     */
+    public function getCurrentRoute(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'employee_id' => 'required|exists:employees,id',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $today = Carbon::today();
+        $employee = Employee::findOrFail($request->employee_id);
+
+        // Obtener todas las visitas programadas para hoy
+        $scheduledVisits = RouteDetail::with(['routeStore.route', 'routeStore.store'])
+            ->where('employees_id', $employee->id)
+            ->where('visit_date', $today)
+            ->orderBy('created_at')
+            ->get();
+
+        if ($scheduledVisits->isEmpty()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'No hay visitas programadas para hoy',
+                'data' => null
+            ]);
+        }
+
+        // Formatear las visitas con la distancia a cada tienda
+        $formattedVisits = $scheduledVisits->map(function ($visit) use ($request) {
+            $distance = $this->calculateDistance(
+                $request->latitude,
+                $request->longitude,
+                $visit->latitude,
+                $visit->longitude
+            );
+
+            return [
+                'visit_id' => $visit->id,
+                'route' => [
+                    'id' => $visit->routeStore->route->id,
+                    'name' => $visit->routeStore->route->name,
+                ],
+                'store' => [
+                    'id' => $visit->routeStore->store->id,
+                    'name' => $visit->routeStore->store->name,
+                    'address' => $visit->routeStore->store->address,
+                    'latitude' => $visit->latitude,
+                    'longitude' => $visit->longitude,
+                    'priority' => $visit->routeStore->store->priority,
+                    'distance' => round($distance, 2), // Distancia en kilómetros
+                ],
+                'status' => $visit->visit_status,
+                'week' => $visit->week,
+                'day_week' => $visit->day_week,
+                'scheduled_time' => $visit->created_at->format('H:i:s'),
+            ];
+        })->values();
+
+        // Ordenar por prioridad de tienda y distancia
+        $formattedVisits = $formattedVisits->sortBy(function ($visit) {
+            return [$visit['store']['priority'], $visit['store']['distance']];
+        })->values();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'employee' => [
+                    'id' => $employee->id,
+                    'name' => $employee->name,
+                ],
+                'date' => $today->format('Y-m-d'),
+                'day_name' => $today->locale('es')->dayName,
+                'total_visits' => $formattedVisits->count(),
+                'completed_visits' => $formattedVisits->where('status', 'completada')->count(),
+                'pending_visits' => $formattedVisits->where('status', 'pendiente')->count(),
+                'visits' => $formattedVisits,
+            ]
+        ]);
+    }
+
+    /**
+     * Lista todas las rutas del empleado
+     */
+    public function listEmployeeRoutes(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'employee_id' => 'required|exists:employees,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $routes = RouteDetail::with(['routeStore.route', 'routeStore.store'])
+            ->where('employees_id', $request->employee_id)
+            ->whereBetween('visit_date', [$request->start_date, $request->end_date])
+            ->orderBy('visit_date')
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy('visit_date');
+
+        $formattedRoutes = [];
+        foreach ($routes as $date => $dayRoutes) {
+            $formattedRoutes[] = [
+                'date' => $date,
+                'routes' => $dayRoutes->map(function ($route) {
+                    return [
+                        'id' => $route->id,
+                        'route' => $route->routeStore->route->name,
+                        'store' => [
+                            'id' => $route->routeStore->store->id,
+                            'name' => $route->routeStore->store->name,
+                            'address' => $route->routeStore->store->address,
+                            'latitude' => $route->latitude,
+                            'longitude' => $route->longitude,
+                        ],
+                        'status' => $route->visit_status,
+                        'week' => $route->week,
+                        'visit_date' => $route->visit_date,
+                        'real_visit_date' => $route->real_visit_date,
+                    ];
+                })->values()
+            ];
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $formattedRoutes
+        ]);
+    }
+
+    /**
+     * Actualiza el estado de una visita
+     */
+    public function updateVisitStatus(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'visit_id' => 'required|exists:route_details,id',
+            'status' => 'required|in:pendiente,completada,cancelada',
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+            'description' => 'nullable|string|max:45',
+            'is_purchase' => 'required|in:si,no',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $visit = RouteDetail::findOrFail($request->visit_id);
+
+        // Verificar que la visita pertenece al empleado actual
+        if ($visit->employees_id != $request->employee_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No tienes permiso para actualizar esta visita'
+            ], 403);
+        }
+
+        // Actualizar la visita
+        $visit->update([
+            'visit_status' => $request->status,
+            'real_visit_date' => Carbon::now()->format('Y-m-d H:i:s'),
+            'description' => $request->description,
+            'is_purchase' => $request->is_purchase,
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Visita actualizada correctamente',
+            'data' => [
+                'id' => $visit->id,
+                'status' => $visit->visit_status,
+                'real_visit_date' => $visit->real_visit_date,
+                'description' => $visit->description,
+                'is_purchase' => $visit->is_purchase,
+            ]
+        ]);
+    }
+
+    /**
+     * Calcula la distancia entre dos puntos usando la fórmula de Haversine
+     */
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371; // Radio de la tierra en kilómetros
+
+        $latDelta = deg2rad($lat2 - $lat1);
+        $lonDelta = deg2rad($lon2 - $lon1);
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($lonDelta / 2) * sin($lonDelta / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
+    }
+}

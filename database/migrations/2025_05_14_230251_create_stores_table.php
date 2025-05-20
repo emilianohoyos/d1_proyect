@@ -21,7 +21,7 @@ class CreateStoresTable extends Migration
             $table->string('email', 45)->nullable();
             $table->string('latitude', 45)->nullable();
             $table->string('longitude', 45)->nullable();
-            $table->string('status', 45)->nullable();
+            $table->boolean('status')->nullable();
             $table->text('descripcion')->nullable();
             $table->foreignId('neighborhood_id')->constrained('neighborhoods');
             $table->integer('priority')->nullable();

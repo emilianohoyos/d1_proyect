@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
@@ -8,7 +8,21 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'Laravel') }} - @yield('title')</title>
+
+    <!-- BEGIN #favicon -->
+    <link rel="shortcut icon" href="{{ asset('assets/img/favicon/favicon.ico') }}">
+    <!-- END #favicon -->
+
+    <!-- BEGIN #app-css -->
+    <link href="{{ asset('assets/css/vendor.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/app.min.css') }}" rel="stylesheet">
+    <!-- END #app-css -->
+
+    <!-- BEGIN #app-js -->
+    <script src="{{ asset('assets/js/vendor.min.js') }}"></script>
+    <script src="{{ asset('assets/js/app.min.js') }}"></script>
+    <!-- END #app-js -->
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
@@ -16,74 +30,43 @@
 
     <!-- Styles -->
     <link href="{{ mix('css/app.css') }}" rel="stylesheet">
+    @stack('styles')
 
     <!-- Scripts -->
     <script src="{{ mix('js/app.js') }}" defer></script>
 </head>
 
-<body>
-    <div id="app">
-        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
-            <div class="container">
-                <a class="navbar-brand" href="{{ url('/') }}">
-                    {{ config('app.name', 'Laravel') }}
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+<body class="pace-done">
+    <!-- BEGIN #app -->
+    <div id="app" class="app">
+        <!-- BEGIN #header -->
+        <div id="header" class="app-header">
+            @include('layouts.partials.header')
+        </div>
+        <!-- END #header -->
 
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <!-- Left Side Of Navbar -->
-                    <ul class="navbar-nav me-auto">
+        <!-- BEGIN #sidebar -->
+        <div id="sidebar" class="app-sidebar">
+            @include('layouts.partials.sidebar')
+        </div>
+        <!-- END #sidebar -->
 
-                    </ul>
-
-                    <!-- Right Side Of Navbar -->
-                    <ul class="navbar-nav ms-auto">
-                        <!-- Authentication Links -->
-                        @guest
-                            @if (Route::has('login'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                                </li>
-                            @endif
-
-                            @if (Route::has('register'))
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
-                                </li>
-                            @endif
-                        @else
-                            <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
-                                    data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-                                    {{ Auth::user()->name }}
-                                </a>
-
-                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
-                                        onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
-                                        {{ __('Logout') }}
-                                    </a>
-
-                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                        @csrf
-                                    </form>
-                                </div>
-                            </li>
-                        @endguest
-                    </ul>
-                </div>
-            </div>
-        </nav>
-
-        <main class="py-4">
+        <!-- BEGIN #content -->
+        <div id="content" class="app-content">
             @yield('content')
-        </main>
+        </div>
+        <!-- END #content -->
+
+        <!-- BEGIN scroll-top-btn -->
+        <a href="javascript:;" class="btn btn-icon btn-circle btn-success btn-scroll-to-top"
+            data-toggle="scroll-to-top">
+            <i class="fa fa-angle-up"></i>
+        </a>
+        <!-- END scroll-top-btn -->
     </div>
+    <!-- END #app -->
+
+    @stack('scripts')
 </body>
 
 </html>
