@@ -17,16 +17,19 @@ use App\Http\Controllers\Api\RouteApiController;
 |
 */
 
-Route::post('login', [AuthController::class, 'login']);
-Route::post('logout', [AuthController::class, 'logout']);
-Route::post('refresh', [AuthController::class, 'refresh']);
-Route::post('me', [AuthController::class, 'me']);
+Route::prefix('auth')->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('logout', [AuthController::class, 'logout']);
+    Route::post('refresh', [AuthController::class, 'refresh']);
+    Route::post('me', [AuthController::class, 'me']);
+});
 
 Route::middleware('auth:api')->group(function () {
     // Rutas para la gestión de rutas y visitas
     Route::prefix('routes')->group(function () {
-        Route::get('/current', [RouteApiController::class, 'getCurrentRoute']);
-        Route::get('/list', [RouteApiController::class, 'listEmployeeRoutes']);
+        Route::post('/current', [RouteApiController::class, 'getCurrentRoute']);
+        Route::post('/list', [RouteApiController::class, 'listEmployeeRoutes']);
         Route::post('/visit/update', [RouteApiController::class, 'updateVisitStatus']);
     });
 

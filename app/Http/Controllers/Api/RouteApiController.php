@@ -17,9 +17,7 @@ class RouteApiController extends Controller
     public function getCurrentRoute(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'employee_id' => 'required|exists:employees,id',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+            'employee_id' => 'required|exists:employees,id'
         ]);
 
         if ($validator->fails()) {
@@ -48,15 +46,8 @@ class RouteApiController extends Controller
             ]);
         }
 
-        // Formatear las visitas con la distancia a cada tienda
-        $formattedVisits = $scheduledVisits->map(function ($visit) use ($request) {
-            $distance = $this->calculateDistance(
-                $request->latitude,
-                $request->longitude,
-                $visit->latitude,
-                $visit->longitude
-            );
-
+        // Formatear las visitas sin información de distancia
+        $formattedVisits = $scheduledVisits->map(function ($visit) {
             return [
                 'visit_id' => $visit->id,
                 'route' => [
@@ -70,7 +61,7 @@ class RouteApiController extends Controller
                     'latitude' => $visit->latitude,
                     'longitude' => $visit->longitude,
                     'priority' => $visit->routeStore->store->priority,
-                    'distance' => round($distance, 2), // Distancia en kilómetros
+                    // Se eliminó el campo distance ya que no tenemos las coordenadas actuales
                 ],
                 'status' => $visit->visit_status,
                 'week' => $visit->week,
@@ -79,10 +70,8 @@ class RouteApiController extends Controller
             ];
         })->values();
 
-        // Ordenar por prioridad de tienda y distancia
-        $formattedVisits = $formattedVisits->sortBy(function ($visit) {
-            return [$visit['store']['priority'], $visit['store']['distance']];
-        })->values();
+        // Ordenar solo por prioridad de tienda (ya que no tenemos distancia)
+        $formattedVisits = $formattedVisits->sortBy('store.priority')->values();
 
         return response()->json([
             'status' => 'success',
@@ -108,8 +97,7 @@ class RouteApiController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'employee_id' => 'required|exists:employees,id',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'month' => 'required|date_format:Y-m',
         ]);
 
         if ($validator->fails()) {
@@ -120,9 +108,13 @@ class RouteApiController extends Controller
             ], 422);
         }
 
+        // Convertir el mes recibido en un rango de fechas
+        $startDate = Carbon::createFromFormat('Y-m', $request->month)->startOfMonth();
+        $endDate = Carbon::createFromFormat('Y-m', $request->month)->endOfMonth();
+
         $routes = RouteDetail::with(['routeStore.route', 'routeStore.store'])
             ->where('employees_id', $request->employee_id)
-            ->whereBetween('visit_date', [$request->start_date, $request->end_date])
+            ->whereBetween('visit_date', [$startDate, $endDate])
             ->orderBy('visit_date')
             ->orderBy('created_at')
             ->get()
@@ -130,12 +122,21 @@ class RouteApiController extends Controller
 
         $formattedRoutes = [];
         foreach ($routes as $date => $dayRoutes) {
+            $carbonDate = Carbon::parse($date);
+
             $formattedRoutes[] = [
                 'date' => $date,
-                'routes' => $dayRoutes->map(function ($route) {
+                'day_name' => $carbonDate->locale('es')->dayName,
+                'total_visits' => $dayRoutes->count(),
+                'completed_visits' => $dayRoutes->where('visit_status', 'completada')->count(),
+                'pending_visits' => $dayRoutes->where('visit_status', 'pendiente')->count(),
+                'routes' => $dayRoutes->map(function ($route) use ($carbonDate) {  // Pasamos $carbonDate aquí
                     return [
                         'id' => $route->id,
-                        'route' => $route->routeStore->route->name,
+                        'route' => [
+                            'id' => $route->routeStore->route->id,
+                            'name' => $route->routeStore->route->name,
+                        ],
                         'store' => [
                             'id' => $route->routeStore->store->id,
                             'name' => $route->routeStore->store->name,
@@ -145,7 +146,8 @@ class RouteApiController extends Controller
                         ],
                         'status' => $route->visit_status,
                         'week' => $route->week,
-                        'visit_date' => $route->visit_date,
+                        'day_week' => $carbonDate->dayOfWeek,
+                        'scheduled_time' => $route->created_at->format('H:i:s'),
                         'real_visit_date' => $route->real_visit_date,
                     ];
                 })->values()
@@ -154,10 +156,14 @@ class RouteApiController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => $formattedRoutes
+            'data' => [
+                'employee_id' => $request->employee_id,
+                'month' => $request->month,
+                'total_days_with_routes' => count($formattedRoutes),
+                'days' => $formattedRoutes,
+            ]
         ]);
     }
-
     /**
      * Actualiza el estado de una visita
      */
