@@ -52,6 +52,8 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                </div>
+                <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="name" class="form-label">Nombre</label>
                         <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
