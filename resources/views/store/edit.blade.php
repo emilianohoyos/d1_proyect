@@ -95,8 +95,15 @@
                     </div>
                     <div class="col-md-6">
                         <label for="priority" class="form-label">Prioridad</label>
-                        <input type="number" class="form-control @error('priority') is-invalid @enderror" id="priority"
-                            name="priority" value="{{ old('priority', $store->priority ?? '') }}">
+                        <select class="form-select @error('priority') is-invalid @enderror" id="priority" name="priority">
+                            <option value="">Seleccione...</option>
+                            <option value="1" {{ old('priority', $store->priority ?? '') == 1 ? 'selected' : '' }}>
+                                Alto</option>
+                            <option value="2" {{ old('priority', $store->priority ?? '') == 2 ? 'selected' : '' }}>
+                                Medio</option>
+                            <option value="3" {{ old('priority', $store->priority ?? '') == 3 ? 'selected' : '' }}>
+                                Bajo</option>
+                        </select>
                         @error('priority')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -115,7 +122,6 @@
                     <div class="form-check form-switch mt-2">
                         <input class="form-check-input" type="checkbox" id="status" name="status" value="1"
                             {{ old('status', isset($store) ? $store->status : false) ? 'checked' : '' }}>
-                        <label class="form-check-label" for="status">Activo</label>
                     </div>
                     @error('status')
                         <div class="invalid-feedback d-block">{{ $message }}</div>

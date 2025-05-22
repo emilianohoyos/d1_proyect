@@ -21,6 +21,47 @@
 
             <div class="row mb-4">
                 <div class="col-md-6">
+                    <h5>Agregar Tiendas</h5>
+                    <form action="{{ route('route.add-stores', $route->id) }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="neighborhood" class="form-label">Filtrar por Barrio</label>
+                            <select class="form-select" id="neighborhood" onchange="filterStoresByNeighborhood()">
+                                <option value="">Todos los barrios</option>
+                                @foreach ($neighborhoods as $neighborhood)
+                                    <option value="{{ $neighborhood->id }}">{{ $neighborhood->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="stores" class="form-label">Seleccionar Tiendas</label>
+                            <select class="form-select" id="stores" name="stores[]" multiple size="10">
+                                @foreach ($availableStores as $store)
+                                    <option value="{{ $store->id }}" data-neighborhood="{{ $store->neighborhood_id }}">
+                                        {{ $store->name }} - {{ $store->address }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('stores')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <button type="button" class="btn btn-info me-2" onclick="selectAllStores()">Seleccionar
+                                    Todas</button>
+                                <button type="button" class="btn btn-info" id="addNeighborhoodBtn"
+                                    onclick="selectNeighborhoodStores()" style="display: none;">Agregar Barrio</button>
+                            </div>
+                            <div>
+                                <a href="{{ route('route.index') }}" class="btn btn-secondary me-2">Regresar</a>
+                                <button type="submit" class="btn btn-primary">Agregar Tiendas</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-md-6">
                     <h5>Tiendas Asignadas</h5>
                     <div class="table-responsive">
                         <table class="table table-bordered">
@@ -56,29 +97,60 @@
                         </table>
                     </div>
                 </div>
-
-                <div class="col-md-6">
-                    <h5>Agregar Tiendas</h5>
-                    <form action="{{ route('route.add-stores', $route->id) }}" method="POST">
-                        @csrf
-                        <div class="mb-3">
-                            <label for="stores" class="form-label">Seleccionar Tiendas</label>
-                            <select class="form-select" id="stores" name="stores[]" multiple size="10">
-                                @foreach ($availableStores as $store)
-                                    <option value="{{ $store->id }}">{{ $store->name }} - {{ $store->address }}</option>
-                                @endforeach
-                            </select>
-                            @error('stores')
-                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="d-flex justify-content-end">
-                            <a href="{{ route('route.index') }}" class="btn btn-secondary me-2">Regresar</a>
-                            <button type="submit" class="btn btn-primary">Agregar Tiendas</button>
-                        </div>
-                    </form>
-                </div>
             </div>
         </div>
     </div>
+
+    <script>
+        function filterStoresByNeighborhood() {
+            const neighborhoodId = document.getElementById('neighborhood').value;
+            const storeOptions = document.getElementById('stores').options;
+            const addNeighborhoodBtn = document.getElementById('addNeighborhoodBtn');
+
+            // Mostrar/ocultar el botón de Agregar Barrio
+            addNeighborhoodBtn.style.display = neighborhoodId ? 'inline-block' : 'none';
+
+            for (let option of storeOptions) {
+                const storeNeighborhoodId = option.getAttribute('data-neighborhood');
+                if (!neighborhoodId || storeNeighborhoodId === neighborhoodId) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+        }
+
+        function selectAllStores() {
+            const storeSelect = document.getElementById('stores');
+            const neighborhoodId = document.getElementById('neighborhood').value;
+
+            for (let option of storeSelect.options) {
+                const storeNeighborhoodId = option.getAttribute('data-neighborhood');
+                if (!neighborhoodId || storeNeighborhoodId === neighborhoodId) {
+                    option.selected = true;
+                }
+            }
+        }
+
+        function selectNeighborhoodStores() {
+            const neighborhoodId = document.getElementById('neighborhood').value;
+            if (!neighborhoodId) {
+                alert('Por favor seleccione un barrio primero');
+                return;
+            }
+
+            const storeSelect = document.getElementById('stores');
+            for (let option of storeSelect.options) {
+                const storeNeighborhoodId = option.getAttribute('data-neighborhood');
+                if (storeNeighborhoodId === neighborhoodId) {
+                    option.selected = true;
+                }
+            }
+        }
+
+        // Asegurarse de que el filtro se aplique al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            filterStoresByNeighborhood();
+        });
+    </script>
 @endsection

@@ -2,7 +2,8 @@
 <div id="header" class="app-header">
     <!-- BEGIN mobile-toggler -->
     <div class="mobile-toggler">
-        <button type="button" class="menu-toggler" @if (!empty($appTopNav) && !empty($appSidebarHide)) data-toggle="top-nav-mobile" @else data-toggle="sidebar-mobile" @endif>
+        <button type="button" class="menu-toggler"
+            @if (!empty($appTopNav) && !empty($appSidebarHide)) data-toggle="top-nav-mobile" @else data-toggle="sidebar-mobile" @endif>
             <span class="bar"></span>
             <span class="bar"></span>
         </button>
@@ -12,14 +13,15 @@
     <!-- BEGIN brand -->
     <div class="brand">
         <div class="desktop-toggler">
-            <button type="button" class="menu-toggler" @if (empty($appSidebarHide))data-toggle="sidebar-minify"@endif>
+            <button type="button" class="menu-toggler"
+                @if (empty($appSidebarHide)) data-toggle="sidebar-minify" @endif>
                 <span class="bar"></span>
                 <span class="bar"></span>
             </button>
         </div>
 
         <a href="/" class="brand-logo">
-            <img src="/assets/img/logo.png" class="invert-dark" alt="" height="20" />
+            <img src="/assets/img/logo.png" class="invert-dark" alt="" height="40" />
         </a>
     </div>
     <!-- END brand -->
@@ -100,12 +102,17 @@
                 <div class="menu-text">johnsmith@studio.com</div>
             </a>
             <div class="dropdown-menu dropdown-menu-end me-lg-3">
-                <a class="dropdown-item d-flex align-items-center" href="/profile">Edit Profile <i class="fa fa-user-circle fa-fw ms-auto text-body text-opacity-50"></i></a>
-                <a class="dropdown-item d-flex align-items-center" href="/email/inbox">Inbox <i class="fa fa-envelope fa-fw ms-auto text-body text-opacity-50"></i></a>
-                <a class="dropdown-item d-flex align-items-center" href="/calendar">Calendar <i class="fa fa-calendar-alt fa-fw ms-auto text-body text-opacity-50"></i></a>
-                <a class="dropdown-item d-flex align-items-center" href="/settings">Setting <i class="fa fa-wrench fa-fw ms-auto text-body text-opacity-50"></i></a>
+                <a class="dropdown-item d-flex align-items-center" href="/profile">Edit Profile <i
+                        class="fa fa-user-circle fa-fw ms-auto text-body text-opacity-50"></i></a>
+                <a class="dropdown-item d-flex align-items-center" href="/email/inbox">Inbox <i
+                        class="fa fa-envelope fa-fw ms-auto text-body text-opacity-50"></i></a>
+                <a class="dropdown-item d-flex align-items-center" href="/calendar">Calendar <i
+                        class="fa fa-calendar-alt fa-fw ms-auto text-body text-opacity-50"></i></a>
+                <a class="dropdown-item d-flex align-items-center" href="/settings">Setting <i
+                        class="fa fa-wrench fa-fw ms-auto text-body text-opacity-50"></i></a>
                 <div class="dropdown-divider"></div>
-                <a class="dropdown-item d-flex align-items-center" href="/page/login">Log Out <i class="fa fa-toggle-off fa-fw ms-auto text-body text-opacity-50"></i></a>
+                <a class="dropdown-item d-flex align-items-center" href="/page/login">Log Out <i
+                        class="fa fa-toggle-off fa-fw ms-auto text-body text-opacity-50"></i></a>
             </div>
         </div>
     </div>

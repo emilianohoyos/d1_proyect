@@ -10,15 +10,15 @@ class LocationHistory extends Model
         'latitud',
         'longitud',
         'visit_date',
-        'route_details_stores_id'
+        'employee_id'
     ];
 
     protected $casts = [
         'visit_date' => 'datetime'
     ];
 
-    public function routeDetailsStore()
+    public function employee()
     {
-        return $this->belongsTo(RouteDetail::class, 'route_details_stores_id');
+        return $this->belongsTo(Employee::class);
     }
 }

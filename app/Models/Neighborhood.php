@@ -11,4 +11,9 @@ class Neighborhood extends Model
         'status',    // boolean
         // 'created_at' y 'updated_at' NO se incluyen (se gestionan automáticamente)
     ];
+
+    public function stores()
+    {
+        return $this->hasMany(Store::class);
+    }
 }

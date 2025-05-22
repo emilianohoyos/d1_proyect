@@ -29,13 +29,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
 	Route::get('route/{id}/stores', [RouteController::class, 'stores'])->name('route.stores');
 	Route::post('route/{id}/stores', [RouteController::class, 'addStores'])->name('route.add-stores');
 	Route::delete('route/{route}/store/{store}', [RouteController::class, 'removeStore'])->name('route.remove-store');
+
+	// Rutas para el calendario (deben ir antes de las rutas de schedule)
+	Route::get('route/schedules/list', [RouteController::class, 'getSchedules'])->name('route.schedules');
+	Route::delete('route/schedule/delete/{id}', [RouteController::class, 'destroySchedule'])->name('route.schedule.destroy');
+
 	Route::get('route-schedule/create', [RouteScheduleController::class, 'create'])->name('route.schedule.create');
 	Route::post('route-schedule', [RouteScheduleController::class, 'store'])->name('route.schedule.store');
 	Route::get('route-schedule/search', [RouteScheduleController::class, 'search'])->name('route.schedule.search');
 	Route::get('route-schedule/results', [RouteScheduleController::class, 'results'])->name('route.schedule.results');
+	Route::get('route/schedule/{id}/edit', [RouteController::class, 'editSchedule'])->name('route.schedule.edit');
+	Route::put('route/schedule/{id}', [RouteController::class, 'updateSchedule'])->name('route.schedule.update');
 
 	Route::get('/', function () {
-		return view('pages.index');
+		return view('home');
 	})->name('home');
 
 	Route::get('/analytics', function () {

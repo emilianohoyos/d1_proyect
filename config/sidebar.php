@@ -15,13 +15,13 @@ return [
 
   'menu' => [
     [
-      'text' => 'Reportes',
+      'text' => 'Home',
       'is_header' => true
     ],
     [
       'url' => '/',
-      'icon' => 'fa fa-laptop',
-      'text' => 'Dashboard'
+      'icon' => 'fa fa-calendar-o',
+      'text' => 'Calendario'
     ],
     // [
     //   'url' => '/analytics',
@@ -50,7 +50,7 @@ return [
       'is_divider' => true
     ],
     [
-      'text' => 'Navegarion',
+      'text' => 'Navegación',
       'is_header' => true
     ],
     [

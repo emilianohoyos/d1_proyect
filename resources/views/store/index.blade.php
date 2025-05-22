@@ -1,6 +1,30 @@
 @extends('layout.default')
 @section('title', 'Tiendas')
 
+@push('css')
+    <link href="/assets/plugins/datatables.net-bs5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="/assets/plugins/datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css" rel="stylesheet">
+    <link href="/assets/plugins/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css" rel="stylesheet">
+    <link href="/assets/plugins/bootstrap-table/dist/bootstrap-table.min.css" rel="stylesheet">
+@endpush
+
+@push('js')
+    <script src="/assets/plugins/@highlightjs/cdn-assets/highlight.min.js"></script>
+    <script src="/assets/js/demo/highlightjs.demo.js"></script>
+    <script src="/assets/plugins/datatables.net/js/dataTables.min.js"></script>
+    <script src="/assets/plugins/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="/assets/plugins/datatables.net-buttons/js/dataTables.buttons.min.js"></script>
+    <script src="/assets/plugins/datatables.net-buttons/js/buttons.colVis.min.js"></script>
+    <script src="/assets/plugins/datatables.net-buttons/js/buttons.html5.min.js"></script>
+    <script src="/assets/plugins/datatables.net-buttons/js/buttons.print.min.js"></script>
+    <script src="/assets/plugins/datatables.net-buttons-bs5/js/buttons.bootstrap5.min.js"></script>
+    <script src="/assets/plugins/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
+    <script src="/assets/plugins/datatables.net-responsive-bs5/js/responsive.bootstrap5.min.js"></script>
+    <script src="/assets/plugins/bootstrap-table/dist/bootstrap-table.min.js"></script>
+    <script src="/assets/js/d1/project.js"></script>
+    {{-- <script src="/assets/js/demo/sidebar-scrollspy.demo.js"></script> --}}
+@endpush
+
 @section('content')
 
     @if (session('success'))
@@ -14,7 +38,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered table-hover align-middle mb-0">
+                <table class="table table-bordered table-hover align-middle mb-0" id="table-default">
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
@@ -25,8 +49,6 @@
                             <th>Teléfono 2</th>
                             <th>Email</th>
                             <th>Barrio</th>
-                            <th>Latitud</th>
-                            <th>Longitud</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -42,8 +64,7 @@
                                 <td>{{ $store->phone_2 }}</td>
                                 <td>{{ $store->email }}</td>
                                 <td>{{ $store->neighborhood->name ?? '' }}</td>
-                                <td>{{ $store->latitude }}</td>
-                                <td>{{ $store->longitude }}</td>
+
                                 <td>
                                     @if ($store->status)
                                         <span class="badge bg-success">Activo</span>

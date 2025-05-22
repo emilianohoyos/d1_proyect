@@ -91,6 +91,7 @@
         "spectrum-colorpicker2": "^2.0.10",
         "summernote": "^0.9.1",
         "svgmap": "^2.12.2",
+        "sweetalert2": "^11.21.2",
         "tag-it": "^2.0.0"
     }
 }

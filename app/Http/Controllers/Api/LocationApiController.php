@@ -19,7 +19,7 @@ class LocationApiController extends Controller
         $validator = Validator::make($request->all(), [
             'latitude' => 'required|string|max:45',
             'longitude' => 'required|string|max:45',
-            'route_details_stores_id' => 'required|exists:route_details_stores,id',
+            'employee_id' => 'required|exists:employees,id',
         ]);
 
         if ($validator->fails()) {
@@ -35,7 +35,7 @@ class LocationApiController extends Controller
                 'latitud' => $request->latitude,
                 'longitud' => $request->longitude,
                 'visit_date' => now(),
-                'route_details_stores_id' => $request->route_details_stores_id,
+                'employee_id' => $request->employee_id,
             ]);
 
             return response()->json([

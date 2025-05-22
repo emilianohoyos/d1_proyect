@@ -31,7 +31,7 @@ mix.copy('resources/scss/images/', 'public/assets/css/images/');
 
 
 // app.min.js
-mix.combine(['resources/js/app.js'], 'public/assets/js/app.min.js');
+// mix.combine(['resources/js/app.js'], 'public/assets/js/app.min.js');
 
 // vendor.min.js
 mix.combine([
@@ -46,6 +46,7 @@ mix.combine([
 
 // plugins
 mix.copy('resources/js/demo', 'public/assets/js/demo/');
+mix.copy('resources/js/d1', 'public/assets/js/d1/');
 mix.copy('node_modules/bootstrap/', 'public/assets/plugins/bootstrap/');
 mix.copy('node_modules/perfect-scrollbar/', 'public/assets/plugins/perfect-scrollbar/');
 mix.copy('node_modules/js-cookie/', 'public/assets/plugins/js-cookie/');
