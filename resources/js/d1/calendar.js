@@ -51,12 +51,12 @@ var handleRenderFullcalendar = function () {
 					var events = response.map(function (schedule) {
 						return {
 							id: schedule.id,
-							title: schedule.employee_name,
+							title: schedule.employee_name + ' - ' + schedule.routes[0],
 							start: schedule.visit_date,
 							color: getRandomColor(schedule.employee_id),
 							extendedProps: {
 								employee_id: schedule.employee_id,
-								route_name: schedule.route_name,
+								route_name: schedule.routes[0],
 								week: schedule.week,
 								day: schedule.day,
 								visit_status: schedule.visit_status
@@ -82,8 +82,7 @@ var handleRenderFullcalendar = function () {
 					<div class="mb-3">
 						<strong>Empleado:</strong> ${info.event.title}<br>
 						<strong>Ruta:</strong> ${info.event.extendedProps.route_name}<br>
-						<strong>Semana:</strong> ${info.event.extendedProps.week}<br>
-						<strong>Día:</strong> ${info.event.extendedProps.day}<br>
+					
 						<strong>Estado:</strong> ${info.event.extendedProps.visit_status}
 					</div>
 				`,

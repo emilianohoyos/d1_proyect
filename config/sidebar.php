@@ -20,7 +20,7 @@ return [
     ],
     [
       'url' => '/',
-      'icon' => 'fa fa-calendar-o',
+      'icon' => 'fa fa-calendar',
       'text' => 'Calendario'
     ],
     // [

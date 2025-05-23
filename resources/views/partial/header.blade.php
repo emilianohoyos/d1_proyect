@@ -21,21 +21,17 @@
         </div>
 
         <a href="/" class="brand-logo">
-            <img src="/assets/img/logo.png" class="invert-dark" alt="" height="40" />
+            <img src="/assets/img/logo.png" class="invert-dark" alt="" width="40" height="40" />
         </a>
     </div>
     <!-- END brand -->
 
     <!-- BEGIN menu -->
     <div class="menu">
-        <form class="menu-search" method="POST" name="header_search_form">
-            <div class="menu-search-icon"><i class="fa fa-search"></i></div>
-            <div class="menu-search-input">
-                <input type="text" class="form-control" placeholder="Search menu..." />
-            </div>
-        </form>
+        <div class="menu-search"></div>
+
         <div class="menu-item dropdown">
-            <a href="#" data-bs-toggle="dropdown" data-display="static" class="menu-link">
+            {{-- <a href="#" data-bs-toggle="dropdown" data-display="static" class="menu-link">
                 <div class="menu-icon"><i class="fa fa-bell nav-icon"></i></div>
                 <div class="menu-label">3</div>
             </a>
@@ -92,27 +88,19 @@
                 <div class="p-2 text-center mb-n1">
                     <a href="#" class="text-body text-opacity-50 text-decoration-none">See all</a>
                 </div>
-            </div>
+            </div> --}}
         </div>
         <div class="menu-item dropdown">
             <a href="#" data-bs-toggle="dropdown" data-display="static" class="menu-link">
                 <div class="menu-img online">
                     <img src="/assets/img/user/user.jpg" alt="" class="ms-100 mh-100 rounded-circle" />
                 </div>
-                <div class="menu-text">johnsmith@studio.com</div>
+                <div class="menu-text">{{ auth()->user()->email }}</div>
             </a>
             <div class="dropdown-menu dropdown-menu-end me-lg-3">
-                <a class="dropdown-item d-flex align-items-center" href="/profile">Edit Profile <i
-                        class="fa fa-user-circle fa-fw ms-auto text-body text-opacity-50"></i></a>
-                <a class="dropdown-item d-flex align-items-center" href="/email/inbox">Inbox <i
-                        class="fa fa-envelope fa-fw ms-auto text-body text-opacity-50"></i></a>
-                <a class="dropdown-item d-flex align-items-center" href="/calendar">Calendar <i
-                        class="fa fa-calendar-alt fa-fw ms-auto text-body text-opacity-50"></i></a>
-                <a class="dropdown-item d-flex align-items-center" href="/settings">Setting <i
-                        class="fa fa-wrench fa-fw ms-auto text-body text-opacity-50"></i></a>
-                <div class="dropdown-divider"></div>
+
                 <a class="dropdown-item d-flex align-items-center" href="/page/login">Log Out <i
-                        class="fa fa-toggle-off fa-fw ms-auto text-body text-opacity-50"></i></a>
+                        class="fa fa-sign-out fa-fw ms-auto text-body text-opacity-50"></i></a>
             </div>
         </div>
     </div>

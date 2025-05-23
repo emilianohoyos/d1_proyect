@@ -10,8 +10,8 @@
 @endpush
 
 @push('js')
-    <script src="/assets/plugins/@highlightjs/cdn-assets/highlight.min.js"></script>
-    <script src="/assets/js/demo/highlightjs.demo.js"></script>
+    {{-- <script src="/assets/plugins/@highlightjs/cdn-assets/highlight.min.js"></script> --}}
+    {{-- <script src="/assets/js/demo/highlightjs.demo.js"></script> --}}
     <script src="/assets/plugins/datatables.net/js/dataTables.min.js"></script>
     <script src="/assets/plugins/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
     <script src="/assets/plugins/datatables.net-buttons/js/dataTables.buttons.min.js"></script>

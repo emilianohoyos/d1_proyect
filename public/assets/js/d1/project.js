@@ -1,5 +1,5 @@
 var handleRenderTableData = function () {
-    var table = $('#table-stores').DataTable({
+    var table = $('#table-default').DataTable({
         lengthMenu: [10, 20, 30, 40, 50],
         responsive: true,
         buttons: [
