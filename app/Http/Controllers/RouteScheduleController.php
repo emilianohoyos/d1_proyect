@@ -39,8 +39,39 @@ class RouteScheduleController extends Controller
             'employee_id' => 'empleado',
         ]);
 
+        // Validar que no exista programación para el mismo empleado y periodo
+        $exists = \App\Models\RouteDetail::where('employees_id', $request->employee_id)
+            ->whereBetween('visit_date', [$request->start_date, $request->end_date])
+            ->exists();
+
+        if ($exists) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Ya existe una programación para este empleado en el periodo seleccionado.');
+        }
+
         try {
             DB::beginTransaction();
+
+            // Verificar que no haya rutas duplicadas en la semana 1
+            $week1Duplicates = array_filter(array_count_values($request->week1_routes), function ($count) {
+                return $count > 1;
+            });
+            if (!empty($week1Duplicates)) {
+                $duplicateRouteIds = array_keys($week1Duplicates);
+                $duplicateRoutes = Route::whereIn('id', $duplicateRouteIds)->pluck('name')->toArray();
+                throw new \Exception('Las siguientes rutas están duplicadas en la semana 1: ' . implode(', ', $duplicateRoutes));
+            }
+
+            // Verificar que no haya rutas duplicadas en la semana 2
+            $week2Duplicates = array_filter(array_count_values($request->week2_routes), function ($count) {
+                return $count > 1;
+            });
+            if (!empty($week2Duplicates)) {
+                $duplicateRouteIds = array_keys($week2Duplicates);
+                $duplicateRoutes = Route::whereIn('id', $duplicateRouteIds)->pluck('name')->toArray();
+                throw new \Exception('Las siguientes rutas están duplicadas en la semana 2: ' . implode(', ', $duplicateRoutes));
+            }
 
             $startDate = Carbon::parse($request->start_date);
             $endDate = Carbon::parse($request->end_date);
@@ -97,19 +128,51 @@ class RouteScheduleController extends Controller
             }
 
             DB::commit();
-            return redirect()->route('route.index')
-                ->with('success', 'Programación de rutas creada correctamente');
+            return redirect()->route('route.index')->with('success', 'Programación creada exitosamente');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()
-                ->with('error', 'Error al crear la programación: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
         }
     }
 
-    public function search()
+    public function search(Request $request)
     {
         $employees = Employee::all();
-        return view('route.schedule-search', compact('employees'));
+        $schedules = null;
+        $employee = null;
+        $monthName = null;
+        $debug = null;
+
+        if ($request->filled('employee_id') && $request->filled('month')) {
+            $debug = $request->all(); // Para depuración
+            $request->validate([
+                'employee_id' => 'required|exists:employees,id',
+                'month' => 'required|date_format:Y-m',
+            ], [], [
+                'employee_id' => 'empleado',
+                'month' => 'mes',
+            ]);
+
+            $startDate = \Carbon\Carbon::parse($request->month)->startOfMonth();
+            $endDate = \Carbon\Carbon::parse($request->month)->endOfMonth();
+
+            $schedules = \App\Models\RouteDetail::with(['routeStore.route', 'routeStore.store', 'employee'])
+                ->where('employees_id', $request->employee_id)
+                ->whereBetween('visit_date', [$startDate, $endDate])
+                ->orderBy('visit_date')
+                ->orderBy('week')
+                ->get()
+                ->groupBy(function ($schedule) {
+                    return \Carbon\Carbon::parse($schedule->visit_date)->format('Y-m-d');
+                });
+
+            $employee = Employee::find($request->employee_id);
+            $monthName = \Carbon\Carbon::parse($request->month)->locale('es')->isoFormat('MMMM YYYY');
+        }
+
+        return view('route.schedule-search', compact('employees', 'schedules', 'employee', 'monthName', 'debug'));
     }
 
     public function results(Request $request)
@@ -139,5 +202,20 @@ class RouteScheduleController extends Controller
         $monthName = Carbon::parse($request->month)->locale('es')->isoFormat('MMMM YYYY');
 
         return view('route.schedule-results', compact('schedules', 'employee', 'monthName'));
+    }
+
+    public function day($date)
+    {
+        $employeeId = request('employee');
+        $query = \App\Models\RouteDetail::with(['routeStore.route', 'routeStore.store', 'employee'])
+            ->where('visit_date', $date);
+
+        if ($employeeId) {
+            $query->where('employees_id', $employeeId);
+        }
+
+        $schedules = $query->orderBy('week')->orderBy('route_store_id')->get();
+
+        return view('route.schedule-day', compact('schedules', 'date', 'employeeId'));
     }
 }

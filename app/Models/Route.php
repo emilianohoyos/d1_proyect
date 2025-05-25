@@ -14,4 +14,9 @@ class Route extends Model
     {
         return $this->belongsToMany(Store::class, 'route_store');
     }
+
+    public function details()
+    {
+        return $this->hasMany(RouteDetail::class);
+    }
 }

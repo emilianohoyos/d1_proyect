@@ -30,4 +30,16 @@ class Store extends Model
     {
         return $this->belongsToMany(Route::class, 'route_store');
     }
+
+    public function routeDetails()
+    {
+        return $this->hasManyThrough(
+            RouteDetail::class,
+            RouteStore::class,
+            'store_id', // Foreign key on route_store table
+            'route_store_id', // Foreign key on route_details table
+            'id', // Local key on stores table
+            'id' // Local key on route_store table
+        );
+    }
 }

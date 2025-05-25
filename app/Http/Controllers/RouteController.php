@@ -76,9 +76,12 @@ class RouteController extends Controller
     public function stores($id)
     {
         $route = Route::findOrFail($id);
-        $availableStores = Store::whereDoesntHave('routes', function ($query) use ($id) {
-            $query->where('routes.id', $id);
-        })->with('neighborhood')->get();
+
+        // Obtener tiendas que no pertenecen a ninguna ruta
+        $availableStores = Store::whereDoesntHave('routes')
+            ->where('status', true) // Solo tiendas activas
+            ->with('neighborhood')
+            ->get();
 
         // Obtener solo los barrios que corresponden a las tiendas disponibles
         $neighborhoods = Neighborhood::whereHas('stores', function ($query) use ($availableStores) {
@@ -102,20 +105,120 @@ class RouteController extends Controller
             'stores.*' => 'tienda'
         ]);
 
-        $route = Route::findOrFail($id);
-        $route->stores()->attach($request->stores);
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('route.stores', $id)
-            ->with('success', 'Tiendas agregadas correctamente');
+            $route = Route::findOrFail($id);
+
+            // Verificar que todas las tiendas estén activas
+            $inactiveStores = Store::whereIn('id', $request->stores)
+                ->where('status', false)
+                ->pluck('name')
+                ->toArray();
+
+            if (!empty($inactiveStores)) {
+                throw new \Exception('Las siguientes tiendas están inactivas y no pueden ser agregadas: ' . implode(', ', $inactiveStores));
+            }
+
+            // Verificar que las tiendas no pertenezcan a otras rutas
+            $storesInOtherRoutes = Store::whereIn('id', $request->stores)
+                ->whereHas('routes', function ($query) use ($id) {
+                    $query->where('routes.id', '!=', $id);
+                })
+                ->pluck('name')
+                ->toArray();
+
+            if (!empty($storesInOtherRoutes)) {
+                throw new \Exception('Las siguientes tiendas ya pertenecen a otras rutas: ' . implode(', ', $storesInOtherRoutes));
+            }
+
+            // Verificar que no haya tiendas duplicadas en la misma ruta
+            $duplicateStores = Store::whereIn('id', $request->stores)
+                ->whereHas('routes', function ($query) use ($id) {
+                    $query->where('routes.id', $id);
+                })
+                ->pluck('name')
+                ->toArray();
+
+            if (!empty($duplicateStores)) {
+                throw new \Exception('Las siguientes tiendas ya están asignadas a esta ruta: ' . implode(', ', $duplicateStores));
+            }
+
+            $route->stores()->attach($request->stores);
+
+            // NUEVO: Si la ruta tiene programaciones, agregar la tienda a los mismos días programados
+            $routeDetails = \App\Models\RouteDetail::whereHas('routeStore', function ($q) use ($id) {
+                $q->where('route_id', $id);
+            })->get();
+
+            foreach ($request->stores as $storeId) {
+                // Obtener o crear el route_store correspondiente
+                $routeStore = \App\Models\RouteStore::firstOrCreate([
+                    'route_id' => $id,
+                    'store_id' => $storeId
+                ]);
+
+                foreach ($routeDetails as $detail) {
+                    // Evitar duplicados: solo crear si no existe ya un detalle para este día, tienda y ruta
+                    $exists = \App\Models\RouteDetail::where('route_store_id', $routeStore->id)
+                        ->where('visit_date', $detail->visit_date)
+                        ->exists();
+                    if (!$exists) {
+                        \App\Models\RouteDetail::create([
+                            'visit_date' => $detail->visit_date,
+                            'visit_status' => $detail->visit_status,
+                            'description' => $detail->description,
+                            'real_visit_date' => $detail->real_visit_date,
+                            'longitude' => $detail->longitude,
+                            'latitude' => $detail->latitude,
+                            'route_store_id' => $routeStore->id,
+                            'employees_id' => $detail->employees_id,
+                            'day_week' => $detail->day_week,
+                            'week' => $detail->week,
+                            'is_purchase' => $detail->is_purchase,
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            return redirect()->route('route.stores', $id)
+                ->with('success', 'Tiendas agregadas correctamente');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('route.stores', $id)
+                ->with('error', $e->getMessage());
+        }
     }
 
     public function removeStore($routeId, $storeId)
     {
-        $route = Route::findOrFail($routeId);
-        $route->stores()->detach($storeId);
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('route.stores', $routeId)
-            ->with('success', 'Tienda removida correctamente');
+            $route = Route::findOrFail($routeId);
+
+            // Obtener el ID de la relación route_store
+            $routeStore = RouteStore::where('route_id', $routeId)
+                ->where('store_id', $storeId)
+                ->first();
+
+            if ($routeStore) {
+                // Eliminar primero los detalles de la ruta
+                RouteDetail::where('route_store_id', $routeStore->id)->delete();
+
+                // Luego eliminar la relación route_store
+                $routeStore->delete();
+            }
+
+            DB::commit();
+            return redirect()->route('route.stores', $routeId)
+                ->with('success', 'Tienda removida correctamente');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('route.stores', $routeId)
+                ->with('error', 'Error al remover la tienda: ' . $e->getMessage());
+        }
     }
 
     public function editSchedule($id)

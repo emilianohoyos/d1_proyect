@@ -98,9 +98,13 @@
                 <div class="menu-text">{{ auth()->user()->email }}</div>
             </a>
             <div class="dropdown-menu dropdown-menu-end me-lg-3">
-
-                <a class="dropdown-item d-flex align-items-center" href="/page/login">Log Out <i
-                        class="fa fa-sign-out fa-fw ms-auto text-body text-opacity-50"></i></a>
+                <a class="dropdown-item d-flex align-items-center" href="{{ route('logout') }}"
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    Log Out <i class="fa fa-sign-out fa-fw ms-auto text-body text-opacity-50"></i>
+                </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                    @csrf
+                </form>
             </div>
         </div>
     </div>

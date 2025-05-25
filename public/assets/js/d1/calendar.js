@@ -76,15 +76,18 @@ var handleRenderFullcalendar = function () {
 		},
 		eventClick: function (info) {
 			// Mostrar modal con opciones
+			const date = info.event.startStr;
+			const employeeId = info.event.extendedProps.employee_id;
+			const dayScheduleUrl = `/route/schedule/day/${date}?employee=${employeeId}`;
 			Info.fire({
 				title: 'Opciones de Programación',
 				html: `
 					<div class="mb-3">
 						<strong>Empleado:</strong> ${info.event.title}<br>
 						<strong>Ruta:</strong> ${info.event.extendedProps.route_name}<br>
-					
 						<strong>Estado:</strong> ${info.event.extendedProps.visit_status}
 					</div>
+					<a href="${dayScheduleUrl}" class="btn btn-info btn-sm">Ver hoy</a>
 				`,
 				showCancelButton: true,
 				showDenyButton: true,
@@ -160,6 +163,22 @@ function getRandomColor(employeeId) {
 
 	// Usar el ID del empleado para seleccionar un color consistente
 	return colors[employeeId % colors.length];
+}
+
+// Suponiendo que tienes una función que muestra el modal de detalle de evento, agrega esto donde muestras los detalles:
+
+// Ejemplo de integración en el callback de evento de FullCalendar
+function showEventDetailModal(event) {
+	// ... tu código para mostrar detalles ...
+	// Agrega el botón para ver la programación del día:
+	const date = event.startStr || event.start; // formato YYYY-MM-DD
+	const dayScheduleUrl = '/route/schedule/day/' + date;
+	const btn = document.createElement('a');
+	btn.href = dayScheduleUrl;
+	btn.className = 'btn btn-info btn-sm mt-2';
+	btn.textContent = 'Ver programación de este día';
+	// Suponiendo que tienes un div con id 'event-detail-actions' en tu modal:
+	document.getElementById('event-detail-actions').appendChild(btn);
 }
 
 /* Controller

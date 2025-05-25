@@ -19,7 +19,11 @@
     <!-- Scripts -->
     <script src="{{ mix('js/app.js') }}" defer></script>
     <script src="{{ asset('assets/js/vendor.min.js') }}"></script>
-    <script src="{{ mix('js/app.js') }}"></script>
+    <script>
+        window.Laravel = {!! json_encode([
+            'csrfToken' => csrf_token(),
+        ]) !!};
+    </script>
 </head>
 
 <body class='pace-done'>

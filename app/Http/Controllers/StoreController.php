@@ -143,7 +143,7 @@ class StoreController extends Controller
                     'language' => 'es',
                     'region' => 'co',
                 ]);
-                // var_dump($response->body());
+            // var_dump($response->body());
             if ($response->successful() && !empty($data = $response->json()) && $data['status'] === 'OK') {
                 $location = $data['results'][0]['geometry']['location'];
                 return [
@@ -183,5 +183,48 @@ class StoreController extends Controller
             "tienda-{$store->id}-qr.png",
             ['Content-Type' => 'image/png']
         );
+    }
+
+    public function toggleStatus($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $store = Store::findOrFail($id);
+            $store->status = !$store->status;
+            $store->save();
+
+            // Si la tienda se está desactivando, eliminar de todas las rutas
+            if (!$store->status) {
+                // Obtener los IDs de route_store
+                $routeStoreIds = DB::table('route_store')
+                    ->where('store_id', $store->id)
+                    ->pluck('id')
+                    ->toArray();
+
+                if (!empty($routeStoreIds)) {
+                    // Eliminar los detalles de ruta primero
+                    DB::table('route_details')
+                        ->whereIn('route_store_id', $routeStoreIds)
+                        ->delete();
+
+                    // Luego eliminar las relaciones de route_store
+                    DB::table('route_store')
+                        ->where('store_id', $store->id)
+                        ->delete();
+                }
+            }
+
+            DB::commit();
+
+            $message = $store->status ? 'Tienda activada correctamente' : 'Tienda desactivada correctamente';
+            session()->flash('success', $message);
+
+            return redirect()->route('store.index');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error al cambiar el estado de la tienda: ' . $e->getMessage());
+            return back();
+        }
     }
 }
