@@ -16,20 +16,8 @@ class RouteApiController extends Controller
      */
     public function getCurrentRoute(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'employee_id' => 'required|exists:employees,id'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Datos inválidos',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         $today = Carbon::today();
-        $employee = Employee::findOrFail($request->employee_id);
+        $employee = Employee::where('user_id', $request->user()->id)->first();
 
         // Obtener todas las visitas programadas para hoy
         $scheduledVisits = RouteDetail::with(['routeStore.route', 'routeStore.store'])
@@ -50,10 +38,7 @@ class RouteApiController extends Controller
         $formattedVisits = $scheduledVisits->map(function ($visit) {
             return [
                 'visit_id' => $visit->id,
-                'route' => [
-                    'id' => $visit->routeStore->route->id,
-                    'name' => $visit->routeStore->route->name,
-                ],
+
                 'store' => [
                     'id' => $visit->routeStore->store->id,
                     'name' => $visit->routeStore->store->name,
@@ -76,6 +61,10 @@ class RouteApiController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
+                'route' => [
+                    'id' => $scheduledVisits->first()->routeStore->route->id,
+                    'name' => $scheduledVisits->first()->routeStore->route->name,
+                ],
                 'employee' => [
                     'id' => $employee->id,
                     'name' => $employee->name,
@@ -96,7 +85,6 @@ class RouteApiController extends Controller
     public function listEmployeeRoutes(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'employee_id' => 'required|exists:employees,id',
             'month' => 'required|date_format:Y-m',
         ]);
 
@@ -112,8 +100,10 @@ class RouteApiController extends Controller
         $startDate = Carbon::createFromFormat('Y-m', $request->month)->startOfMonth();
         $endDate = Carbon::createFromFormat('Y-m', $request->month)->endOfMonth();
 
+        $employee = Employee::where('user_id', $request->user()->id)->first();
+
         $routes = RouteDetail::with(['routeStore.route', 'routeStore.store'])
-            ->where('employees_id', $request->employee_id)
+            ->where('employees_id', $employee->id)
             ->whereBetween('visit_date', [$startDate, $endDate])
             ->orderBy('visit_date')
             ->orderBy('created_at')
@@ -125,6 +115,10 @@ class RouteApiController extends Controller
             $carbonDate = Carbon::parse($date);
 
             $formattedRoutes[] = [
+                'route' => [
+                    'id' => $dayRoutes->first()->routeStore->route->id,
+                    'name' => $dayRoutes->first()->routeStore->route->name,
+                ],
                 'date' => $date,
                 'day_name' => $carbonDate->locale('es')->dayName,
                 'total_visits' => $dayRoutes->count(),
@@ -133,10 +127,6 @@ class RouteApiController extends Controller
                 'routes' => $dayRoutes->map(function ($route) use ($carbonDate) {  // Pasamos $carbonDate aquí
                     return [
                         'id' => $route->id,
-                        'route' => [
-                            'id' => $route->routeStore->route->id,
-                            'name' => $route->routeStore->route->name,
-                        ],
                         'store' => [
                             'id' => $route->routeStore->store->id,
                             'name' => $route->routeStore->store->name,

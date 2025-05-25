@@ -15,6 +15,8 @@ class StoreController extends Controller
 {
     public function index()
     {
+        // dd($coordinates = $this->geocodeAddress("Dg. 80 #76-47"));
+
         $stores = Store::with('neighborhood')->get();
         return view('store.index', compact('stores'));
     }
@@ -132,23 +134,26 @@ class StoreController extends Controller
     protected function geocodeAddress(string $address): array
     {
         try {
+            $apiKey = env('GOOGLE_MAPS_API_KEY');
+            $fullAddress = $address . ', Medellín, Colombia';
             $response = Http::timeout(8)
-                ->withHeaders(['User-Agent' => config('app.name')])
-                ->get('https://nominatim.openstreetmap.org/search', [
-                    'q' => $address . ', Medellín, Colombia', // Añade contexto geográfico
-                    'format' => 'json',
-                    'limit' => 1,
-                    'countrycodes' => 'co',
-                    'accept-language' => 'es',
+                ->get('https://maps.googleapis.com/maps/api/geocode/json', [
+                    'address' => $fullAddress,
+                    'key' => $apiKey,
+                    'language' => 'es',
+                    'region' => 'co',
                 ]);
-
-            if ($response->successful() && !empty($data = $response->json())) {
+                // var_dump($response->body());
+            if ($response->successful() && !empty($data = $response->json()) && $data['status'] === 'OK') {
+                $location = $data['results'][0]['geometry']['location'];
                 return [
-                    'lat' => (float)$data[0]['lat'],
-                    'lng' => (float)$data[0]['lon'],
+                    'lat' => (float)$location['lat'],
+                    'lng' => (float)$location['lng'],
                 ];
+            } else {
+                Log::warning('Google Geocoding failed: ' . ($data['status'] ?? 'Sin respuesta'));
             }
-        } catch (RequestException $e) {
+        } catch (\Exception $e) {
             Log::warning('Geocoding failed: ' . $e->getMessage());
         }
 
