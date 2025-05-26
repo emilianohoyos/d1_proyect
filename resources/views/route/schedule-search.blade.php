@@ -1,13 +1,8 @@
 @extends('layout.default')
 @section('title', 'Consultar Programación')
-@push('css')
-    <link href="/assets/plugins/sweetalert2/sweetalert2.min.css" rel="stylesheet">
-@endpush
+
 
 @push('js')
-  
-   
-    <script src="/assets/plugins/sweetalert2/sweetalert2.all.min.js"></script>
     <script>
         function showDeleteConfirmation(id) {
             Swal.fire({
