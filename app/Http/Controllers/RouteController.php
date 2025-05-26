@@ -199,6 +199,18 @@ class RouteController extends Controller
             $route = Route::findOrFail($routeId);
 
             // Obtener el ID de la relación route_store
+
+    public function deleteSchedule($id)
+    {
+        try {
+            $schedule = RouteDetail::findOrFail($id);
+            $schedule->delete();
+            
+            return redirect()->back()->with('success', 'Programación eliminada correctamente');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al eliminar la programación: ' . $e->getMessage());
+        }
+    }
             $routeStore = RouteStore::where('route_id', $routeId)
                 ->where('store_id', $storeId)
                 ->first();

@@ -137,6 +137,18 @@ class RouteScheduleController extends Controller
         }
     }
 
+    public function delete($id)
+    {
+        try {
+            $detail = RouteDetail::findOrFail($id);
+            $detail->delete();
+            
+            return redirect()->back()->with('success', 'Programación eliminada correctamente');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al eliminar la programación: ' . $e->getMessage());
+        }
+    }
+
     public function search(Request $request)
     {
         $employees = Employee::all();

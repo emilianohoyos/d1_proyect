@@ -1,5 +1,32 @@
 @extends('layout.default')
 @section('title', 'Consultar Programación')
+@push('css')
+    <link href="/assets/plugins/sweetalert2/sweetalert2.min.css" rel="stylesheet">
+@endpush
+
+@push('js')
+  
+   
+    <script src="/assets/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+    <script>
+        function showDeleteConfirmation(id) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: 'Esta acción eliminará la programación seleccionada.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteForm' + id).submit();
+                }
+            });
+        }
+        </script>
+@endpush
 
 @section('content')
     <div class="card shadow">
@@ -54,43 +81,89 @@
     </div>
 
     @if (isset($schedules) && $schedules->count())
-        <div class="card shadow mt-4">
-            <div class="card-header text-white">
-                <h5 class="mb-0">Resultados para {{ $employee->name }} - {{ $monthName }}</h5>
+        <div class="accordion" id="scheduleAccordion">
+            <div class="card shadow mb-4">
+                <div class="card-header text-white">
+                    <h5 class="mb-0">Resultados para {{ $employees->find(request('employee_id'))->name }} - {{ request('month') }}</h5>
+                </div>
             </div>
-            <div class="card-body">
-                @foreach ($schedules as $date => $details)
-                    <div class="mb-3">
-                        <h6 class="mb-1">{{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}</h6>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Ruta</th>
-                                        <th>Tienda</th>
-                                        <th>Estado</th>
-                                        <th>Semana</th>
-                                        <th>Descripción</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($details as $detail)
+            @foreach ($schedules as $date => $details)
+                <div class="card shadow mb-3">
+                    <div class="card-header" id="heading{{ $loop->index }}">
+                        <h6 class="mb-0">
+                            <button class="btn btn-link btn-block text-left collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#collapse{{ $loop->index }}" aria-expanded="false" 
+                                    aria-controls="collapse{{ $loop->index }}">
+                                {{ date('d/m/Y', strtotime($date)) }}
+                            </button>
+                        </h6>
+                    </div>
+                    <div id="collapse{{ $loop->index }}" class="collapse" aria-labelledby="heading{{ $loop->index }}" 
+                         data-parent="#scheduleAccordion">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm">
+                                    <thead>
                                         <tr>
-                                            <td>{{ $detail->routeStore->route->name ?? '-' }}</td>
-                                            <td>{{ $detail->routeStore->store->name ?? '-' }}</td>
-                                            <td>{{ $detail->visit_status }}</td>
-                                            <td>{{ $detail->week }}</td>
-                                            <td>{{ $detail->description }}</td>
+                                            <th>Ruta</th>
+                                            <th>Tienda</th>
+                                            <th>Estado</th>
+                                            <th>Semana</th>
+                                            <th>Descripción</th>
+                                            <th>Compra</th>
+                                            <th>Acciones</th>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($details as $detail)
+                                            <tr>
+                                                <td>{{ $detail->routeStore->route->name ?? '-' }}</td>
+                                                <td>{{ $detail->routeStore->store->name ?? '-' }}</td>
+                                                <td>{{ $detail->visit_status }}</td>
+                                                <td>{{ $detail->week }}</td>
+                                                <td>{{ $detail->description }}</td>
+                                                <td>{{ $detail->is_purchase === '1' ? 'Sí' : 'No' }}</td>
+                                                <td>
+                                                    <form action="{{ route('route.schedule.delete', $detail->id) }}" method="POST" class="d-inline" id="deleteForm{{ $detail->id }}">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteConfirmation({{ $detail->id }})">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                @endforeach
-            </div>
+                </div>
+            @endforeach
         </div>
     @elseif(isset($schedules))
         <div class="alert alert-info mt-4">No hay programación para los criterios seleccionados.</div>
     @endif
+@endsection
+
+@section('scripts')
+<script>
+function showDeleteConfirmation(id) {
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: 'Esta acción eliminará la programación seleccionada.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('deleteForm' + id).submit();
+        }
+    });
+}
+</script>
 @endsection
