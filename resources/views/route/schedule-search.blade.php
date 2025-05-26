@@ -82,6 +82,33 @@
                     <h5 class="mb-0">Resultados para {{ $employees->find(request('employee_id'))->name }} - {{ request('month') }}</h5>
                 </div>
             </div>
+            <div class="card shadow mb-3">
+                <div class="card-body">
+                    <form action="{{ route('route.schedule.search') }}" method="GET" class="mb-3">
+                        @csrf
+                        <input type="hidden" name="employee_id" value="{{ request('employee_id') }}">
+                        <input type="hidden" name="month" value="{{ request('month') }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="selected_date" class="form-label">Filtrar por fecha</label>
+                                    <input type="date" class="form-control" id="selected_date" name="selected_date" 
+                                           value="{{ request('selected_date') }}" 
+                                           min="{{ \Carbon\Carbon::parse(request('month'))->startOfMonth()->format('Y-m-d') }}"
+                                           max="{{ \Carbon\Carbon::parse(request('month'))->endOfMonth()->format('Y-m-d') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                                    <a href="{{ route('route.schedule.search', ['employee_id' => request('employee_id'), 'month' => request('month')]) }}" 
+                                         class="btn btn-secondary">Ver todos</a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
             @foreach ($schedules as $date => $details)
                 <div class="card shadow mb-3">
                     <div class="card-header" id="heading{{ $loop->index }}">

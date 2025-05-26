@@ -155,6 +155,7 @@ class RouteScheduleController extends Controller
         $schedules = null;
         $employee = null;
         $monthName = null;
+        $selectedDate = null;
         $debug = null;
 
         if ($request->filled('employee_id') && $request->filled('month')) {
@@ -162,20 +163,28 @@ class RouteScheduleController extends Controller
             $request->validate([
                 'employee_id' => 'required|exists:employees,id',
                 'month' => 'required|date_format:Y-m',
+                'selected_date' => 'nullable|date_format:Y-m-d',
             ], [], [
                 'employee_id' => 'empleado',
                 'month' => 'mes',
+                'selected_date' => 'fecha seleccionada',
             ]);
 
             $startDate = \Carbon\Carbon::parse($request->month)->startOfMonth();
             $endDate = \Carbon\Carbon::parse($request->month)->endOfMonth();
 
-            $schedules = \App\Models\RouteDetail::with(['routeStore.route', 'routeStore.store', 'employee'])
+            $query = \App\Models\RouteDetail::with(['routeStore.route', 'routeStore.store', 'employee'])
                 ->where('employees_id', $request->employee_id)
                 ->whereBetween('visit_date', [$startDate, $endDate])
                 ->orderBy('visit_date')
-                ->orderBy('week')
-                ->get()
+                ->orderBy('week');
+
+            if ($request->filled('selected_date')) {
+                $query->where('visit_date', $request->selected_date);
+                $selectedDate = $request->selected_date;
+            }
+
+            $schedules = $query->get()
                 ->groupBy(function ($schedule) {
                     return \Carbon\Carbon::parse($schedule->visit_date)->format('Y-m-d');
                 });
@@ -184,7 +193,7 @@ class RouteScheduleController extends Controller
             $monthName = \Carbon\Carbon::parse($request->month)->locale('es')->isoFormat('MMMM YYYY');
         }
 
-        return view('route.schedule-search', compact('employees', 'schedules', 'employee', 'monthName', 'debug'));
+        return view('route.schedule-search', compact('employees', 'schedules', 'employee', 'monthName', 'debug', 'selectedDate'));
     }
 
     public function results(Request $request)
