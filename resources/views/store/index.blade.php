@@ -24,6 +24,7 @@
     <script src="/assets/plugins/bootstrap-table/dist/bootstrap-table.min.js"></script>
     <script src="/assets/plugins/sweetalert2/sweetalert2.all.min.js"></script>
     <script src="/assets/js/d1/project.js"></script>
+    <script src="/assets/plugins/dist/jquery.js"></script>
     {{-- <script src="/assets/js/demo/sidebar-scrollspy.demo.js"></script> --}}
 @endpush
 

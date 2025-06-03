@@ -117,6 +117,22 @@ return [
 
       ]
     ],
+    [
+
+      'icon' => 'fas fa-map-marker-alt',
+      'text' => 'Barrios',
+      'children' => [
+        [
+          'url' => '/neighborhood/create',
+          'text' => 'Crear'
+        ],
+        [
+          'url' => '/neighborhood',
+          'text' => 'Listar'
+        ],
+
+      ]
+    ],
     // [
     //   'url' => '/widgets',
     //   'icon' => 'fa fa-qrcode',

@@ -1,6 +1,56 @@
 @extends('layout.default')
 @section('title', isset($store) ? 'Editar Tienda' : 'Nueva Tienda')
 
+@push('js')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Cuando cambia el departamento
+            $('#department_id').change(function() {
+                let departmentId = $(this).val();
+                $('#municipality_id').empty().append('<option value="">Seleccione un municipio</option>')
+                    .prop('disabled', true);
+                $('#neighborhood_id').empty().append('<option value="">Seleccione un barrio</option>').prop(
+                    'disabled', true);
+                alert(departmentId);
+                if (departmentId) {
+                    $.get(`/municipalities/${departmentId}`, function(data) {
+                        if (data.length > 0) {
+                            $('#municipality_id').prop('disabled', false);
+                            $.each(data, function(key, municipality) {
+                                $('#municipality_id').append(
+                                    `<option value="${municipality.id}">${municipality.name}</option>`
+                                );
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Cuando cambia el municipio
+            $('#municipality_id').change(function() {
+                let municipalityId = $(this).val();
+                $('#neighborhood_id').empty().append('<option value="">Seleccione un barrio</option>').prop(
+                    'disabled', true);
+
+                if (municipalityId) {
+                    $.get(`/neighborhoods/${municipalityId}`, function(data) {
+                        if (data.length > 0) {
+                            $('#neighborhood_id').prop('disabled', false);
+                            $.each(data, function(key, neighborhood) {
+                                $('#neighborhood_id').append(
+                                    `<option value="${neighborhood.id}">${neighborhood.name}</option>`
+                                );
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+@endpush
+
 @section('content')
 
     <div class="card shadow">
@@ -33,16 +83,6 @@
                         @enderror
                     </div>
                     <div class="col-md-6">
-                        <label for="address" class="form-label">Dirección</label>
-                        <input type="text" class="form-control @error('address') is-invalid @enderror" id="address"
-                            name="address" value="{{ old('address', $store->address ?? '') }}">
-                        @error('address')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
                         <label for="name_charge" class="form-label">Encargado</label>
                         <input type="text" class="form-control @error('name_charge') is-invalid @enderror"
                             id="name_charge" name="name_charge" value="{{ old('name_charge', $store->name_charge ?? '') }}">
@@ -50,18 +90,49 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-6">
-                        <label for="neighborhood_id" class="form-label">Barrio</label>
-                        <select class="form-select @error('neighborhood_id') is-invalid @enderror" id="neighborhood_id"
-                            name="neighborhood_id">
-                            <option value="">Seleccione...</option>
-                            @foreach ($neighborhoods as $neighborhood)
-                                <option value="{{ $neighborhood->id }}"
-                                    {{ old('neighborhood_id', $store->neighborhood_id ?? '') == $neighborhood->id ? 'selected' : '' }}>
-                                    {{ $neighborhood->name }}</option>
+
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="department_id" class="form-label">Departamento</label>
+                        <select class="form-control" id="department_id" name="department_id">
+                            <option value="">Seleccione un departamento</option>
+                            @foreach ($departments as $department)
+                                <option value="{{ $department->department_id }}">{{ $department->department_name }}</option>
                             @endforeach
                         </select>
+                        @error('department_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label for="municipality_id" class="form-label">Municipio</label>
+                        <select class="form-control" id="municipality_id" name="municipality_id" disabled>
+                            <option value="">Seleccione un municipio</option>
+                        </select>
+                        @error('municipality_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="neighborhood_id" class="form-label">Barrio</label>
+                        <select class="form-control" id="neighborhood_id" name="neighborhood_id" disabled>
+                            <option value="">Seleccione un barrio</option>
+                        </select>
+
                         @error('neighborhood_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="address" class="form-label">Dirección</label>
+                        <input type="text" class="form-control @error('address') is-invalid @enderror" id="address"
+                            name="address" value="{{ old('address', $store->address ?? '') }}">
+                        @error('address')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

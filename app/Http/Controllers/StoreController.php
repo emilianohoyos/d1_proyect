@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Department;
 use App\Models\Store;
 use App\Models\Neighborhood;
 use GuzzleHttp\Exception\RequestException;
@@ -23,8 +24,8 @@ class StoreController extends Controller
 
     public function create()
     {
-        $neighborhoods = Neighborhood::all();
-        return view('store.create', compact('neighborhoods'));
+        $departments = Department::all();
+        return view('store.create', compact('departments'));
     }
 
     public function store(Request $request)

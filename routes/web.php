@@ -4,9 +4,13 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\RouteController;
 use App\Http\Controllers\RouteScheduleController;
+use App\Http\Controllers\NeighborhoodController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Department;
+use App\Models\Municipality;
+use App\Models\Neighborhood;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,11 +43,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
 	Route::post('route-schedule', [RouteScheduleController::class, 'store'])->name('route.schedule.store');
 	Route::get('route-schedule/search', [RouteScheduleController::class, 'search'])->name('route.schedule.search');
 	Route::get('route-schedule/results', [RouteScheduleController::class, 'results'])->name('route.schedule.results');
-Route::delete('route-schedule/{id}', [RouteScheduleController::class, 'delete'])->name('route.schedule.delete');
+	Route::delete('route-schedule/{id}', [RouteScheduleController::class, 'delete'])->name('route.schedule.delete');
 	Route::get('route/schedule/{id}/edit', [RouteController::class, 'editSchedule'])->name('route.schedule.edit');
 	Route::put('route/schedule/{id}', [RouteController::class, 'updateSchedule'])->name('route.schedule.update');
 
 	Route::get('route/schedule/day/{date}', [RouteScheduleController::class, 'day'])->name('route.schedule.day');
+
+	Route::get('/departments', function () {
+		return Department::all();
+	});
+
+	Route::get('/municipalities/{department}', function (Department $department) {
+		return $department->municipalities;
+	});
+
+	Route::get('/neighborhoods/{municipality}', function (Municipality $municipality) {
+		return $municipality->neighborhoods;
+	});
+
+	Route::resource('neighborhood', NeighborhoodController::class);
 
 	Route::get('/', function () {
 		return view('home');
