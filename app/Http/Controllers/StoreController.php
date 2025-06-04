@@ -132,7 +132,7 @@ class StoreController extends Controller
     }
 
 
-    protected function geocodeAddress(string $address): array
+    public function geocodeAddress(string $address): array
     {
         try {
             $apiKey = env('GOOGLE_MAPS_API_KEY');

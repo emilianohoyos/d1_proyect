@@ -181,7 +181,7 @@ class RouteController extends Controller
                 }
             }
 
-            DB::commit();
+           
             return redirect()->route('route.stores', $id)
                 ->with('success', 'Tiendas agregadas correctamente');
         } catch (\Exception $e) {
