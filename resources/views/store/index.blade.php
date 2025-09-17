@@ -7,6 +7,14 @@
     <link href="/assets/plugins/datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css" rel="stylesheet">
     <link href="/assets/plugins/bootstrap-table/dist/bootstrap-table.min.css" rel="stylesheet">
     <link href="/assets/plugins/sweetalert2/sweetalert2.min.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+    <style>
+        #map-container {
+            height: 400px;
+            width: 100%;
+        }
+    </style>
 @endpush
 
 @push('js')
@@ -25,6 +33,8 @@
     <script src="/assets/plugins/sweetalert2/sweetalert2.all.min.js"></script>
     <script src="/assets/js/d1/project.js"></script>
     <script src="/assets/plugins/dist/jquery.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
     {{-- <script src="/assets/js/demo/sidebar-scrollspy.demo.js"></script> --}}
 @endpush
 
@@ -85,8 +95,17 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ route('store.downloadQR', $store->id) }}"
-                                        class="btn btn-sm btn-primary">Generar QR</a>
+                                @if($store->latitude && $store->longitude)
+                                    <button type="button" class="btn btn-sm btn-info show-map-btn" 
+                                        data-lat="{{ str_replace(',', '.', $store->latitude) }}" 
+                                        data-lng="{{ str_replace(',', '.', $store->longitude) }}" 
+                                        data-name="{{ $store->name }}" 
+                                        data-address="{{ $store->address }}"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#mapModal">
+                                        Ver mapa
+                                    </button>
+                                    @endif
                                     <a href="{{ route('store.edit', $store->id) }}"
                                         class="btn btn-sm btn-warning">Editar</a>
                                     <form action="{{ route('store.toggle-status', $store->id) }}" method="POST"
@@ -104,6 +123,7 @@
                                         @method('DELETE')
                                         <button class="btn btn-sm btn-danger" type="submit">Eliminar</button>
                                     </form>
+                                  
                                 </td>
                             </tr>
                         @empty
@@ -117,8 +137,80 @@
         </div>
     </div>
 
+    <!-- Modal para mostrar el mapa -->
+    <div class="modal fade" id="mapModal" tabindex="-1" aria-labelledby="mapModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mapModalLabel">Ubicación de la tienda</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="map-container"></div>
+                    <div class="mt-2">
+                        <p><strong>Nombre:</strong> <span id="store-name"></span></p>
+                        <p><strong>Dirección:</strong> <span id="store-address"></span></p>
+                        <p><strong>Coordenadas:</strong> <span id="store-coordinates"></span></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Mapa de Leaflet
+            let map;
+            let marker;
+            
+            // Inicializar el mapa cuando se abre el modal
+            $('#mapModal').on('shown.bs.modal', function (e) {
+                // Si el mapa ya está inicializado, destruirlo
+                if (map) {
+                    map.remove();
+                    map = null;
+                }
+                
+                // Obtener datos del botón que abrió el modal
+                const button = e.relatedTarget;
+                const lat = parseFloat(button.getAttribute('data-lat'));
+                const lng = parseFloat(button.getAttribute('data-lng'));
+                const name = button.getAttribute('data-name');
+                const address = button.getAttribute('data-address');
+                
+                // Actualizar información en el modal
+                document.getElementById('store-name').textContent = name;
+                document.getElementById('store-address').textContent = address;
+                document.getElementById('store-coordinates').textContent = `${lat}, ${lng}`;
+                
+                // Inicializar el mapa
+                map = L.map('map-container').setView([lat, lng], 15);
+                
+                // Añadir capa de OpenStreetMap (gratuito)
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                }).addTo(map);
+                
+                // Añadir marcador
+                marker = L.marker([lat, lng]).addTo(map);
+                marker.bindPopup(`<b>${name}</b><br>${address}`).openPopup();
+                
+                // Actualizar el tamaño del mapa después de que se muestre el modal
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 100);
+            });
+            
+            // Limpiar el mapa cuando se cierra el modal
+            $('#mapModal').on('hidden.bs.modal', function () {
+                if (map) {
+                    map.remove();
+                    map = null;
+                }
+            });
             // Manejar el formulario de toggle-status
             const toggleForms = document.querySelectorAll('.toggle-status-form');
             toggleForms.forEach(form => {
@@ -172,4 +264,7 @@
             });
         });
     </script>
+    
+    <!-- Bootstrap JS para los modales -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 @endsection

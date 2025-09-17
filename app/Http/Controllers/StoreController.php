@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Department;
 use App\Models\Store;
+use App\Models\Municipality;
 use App\Models\Neighborhood;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Request;
@@ -41,6 +42,8 @@ class StoreController extends Controller
             'descripcion' => 'nullable|string',
             'neighborhood_id' => 'required|exists:neighborhoods,id',
             'priority' => 'nullable|integer',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ], [], [
             'name' => 'nombre',
             'address' => 'dirección',
@@ -52,19 +55,36 @@ class StoreController extends Controller
             'descripcion' => 'descripción',
             'neighborhood_id' => 'barrio',
             'priority' => 'prioridad',
+            'latitude' => 'latitud',
+            'longitude' => 'longitud',
         ]);
 
-        // Geocodificación con manejo de errores
-        $coordinates = $this->geocodeAddress($validated['address']);
-
+        // Convertir puntos a comas en latitud y longitud
+        if (isset($validated['latitude']) && $validated['latitude'] !== null) {
+            $validated['latitude'] = str_replace('.', ',', $validated['latitude']);
+        }
+        
+        if (isset($validated['longitude']) && $validated['longitude'] !== null) {
+            $validated['longitude'] = str_replace('.', ',', $validated['longitude']);
+        }
+        
         // Creación del registro con transacción
         try {
-            $store = DB::transaction(function () use ($validated, $coordinates) {
-                return Store::create(array_merge($validated, [
-                    'latitude' => $coordinates['lat'] ?? null,
-                    'longitude' => $coordinates['lng'] ?? null,
-                    'status' => $validated['status'] ?? true, // Valor por defecto
-                ]));
+            $store = DB::transaction(function () use ($validated) {
+                return Store::create([
+                    'name' => $validated['name'],
+                    'address' => $validated['address'],
+                    'name_charge' => $validated['name_charge'] ?? null,
+                    'phone_1' => $validated['phone_1'] ?? null,
+                    'phone_2' => $validated['phone_2'] ?? null,
+                    'email' => $validated['email'] ?? null,
+                    'status' => $validated['status'] ?? true,
+                    'descripcion' => $validated['descripcion'] ?? null,
+                    'neighborhood_id' => $validated['neighborhood_id'],
+                    'priority' => $validated['priority'] ?? null,
+                    'latitude' => $validated['latitude'] ?? null,
+                    'longitude' => $validated['longitude'] ?? null,
+                ]);
             });
 
             return redirect()->route('store.index')
@@ -78,9 +98,22 @@ class StoreController extends Controller
 
     public function edit($id)
     {
-        $store = Store::findOrFail($id);
-        $neighborhoods = Neighborhood::all();
-        return view('store.edit', compact('store', 'neighborhoods'));
+        $store = Store::with('neighborhood.municipality.department')->findOrFail($id);
+        $departments = Department::all();
+        
+        // Get the municipality of the store's neighborhood
+        $municipalities = [];
+        if ($store->neighborhood && $store->neighborhood->municipality) {
+            $municipalities = Municipality::where('department_id', $store->neighborhood->municipality->department_id)->get();
+        }
+        
+        // Get the neighborhoods of the municipality
+        $neighborhoods = [];
+        if ($store->neighborhood && $store->neighborhood->municipality_id) {
+            $neighborhoods = Neighborhood::where('municipality_id', $store->neighborhood->municipality_id)->get();
+        }
+        
+        return view('store.edit', compact('store', 'departments', 'municipalities', 'neighborhoods'));
     }
 
     public function update(Request $request, $id)
@@ -96,19 +129,36 @@ class StoreController extends Controller
             'descripcion' => 'nullable|string',
             'neighborhood_id' => 'required|exists:neighborhoods,id',
             'priority' => 'nullable|integer',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+        ], [], [
+            'name' => 'nombre',
+            'address' => 'dirección',
+            'name_charge' => 'encargado',
+            'phone_1' => 'teléfono 1',
+            'phone_2' => 'teléfono 2',
+            'email' => 'correo',
+            'status' => 'estado',
+            'descripcion' => 'descripción',
+            'neighborhood_id' => 'barrio',
+            'priority' => 'prioridad',
+            'latitude' => 'latitud',
+            'longitude' => 'longitud',
         ]);
 
+        // Convertir puntos a comas en latitud y longitud
+        if (isset($validated['latitude']) && $validated['latitude'] !== null) {
+            $validated['latitude'] = str_replace('.', ',', $validated['latitude']);
+        }
+        
+        if (isset($validated['longitude']) && $validated['longitude'] !== null) {
+            $validated['longitude'] = str_replace('.', ',', $validated['longitude']);
+        }
+        
         try {
             $store = Store::findOrFail($id);
 
             DB::transaction(function () use ($store, $validated) {
-                // Actualizar coordenadas solo si la dirección cambió
-                if ($store->address !== $validated['address']) {
-                    $coordinates = $this->geocodeAddress($validated['address']);
-                    $validated['latitude'] = $coordinates['lat'] ?? null;
-                    $validated['longitude'] = $coordinates['lng'] ?? null;
-                }
-
                 $store->update($validated);
             });
 

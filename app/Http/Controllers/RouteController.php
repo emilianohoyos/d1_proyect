@@ -390,4 +390,69 @@ class RouteController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+    
+    /**
+     * Obtiene las tiendas de una ruta específica para mostrarlas en el mapa
+     *
+     * @param int $id ID de la ruta
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getRouteStores($id)
+    {
+        try {
+            $route = Route::findOrFail($id);
+            
+            // Obtener todas las tiendas de la ruta con sus coordenadas
+            $stores = $route->stores()
+                ->select('stores.id', 'stores.name', 'stores.address', 'stores.latitude', 'stores.longitude', 'stores.priority')
+                ->where('stores.status', true)
+                ->orderBy('stores.priority')
+                ->get()
+                ->map(function($store) {
+                    // Convertir coordenadas de formato con coma a formato con punto
+                    if ($store->latitude) {
+                        $store->latitude = str_replace(',', '.', $store->latitude);
+                    }
+                    if ($store->longitude) {
+                        $store->longitude = str_replace(',', '.', $store->longitude);
+                    }
+                    return $store;
+                });
+            
+            // Verificar si hay tiendas con coordenadas válidas
+            $validStores = $stores->filter(function($store) {
+                return !empty($store->latitude) && !empty($store->longitude);
+            });
+            
+            if ($validStores->isEmpty()) {
+                return response()->json([
+                    'status' => 'warning',
+                    'message' => 'No hay tiendas con coordenadas válidas en esta ruta.',
+                    'data' => [
+                        'route' => [
+                            'id' => $route->id,
+                            'name' => $route->name,
+                        ],
+                        'stores' => [],
+                    ]
+                ]);
+            }
+            
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'route' => [
+                        'id' => $route->id,
+                        'name' => $route->name,
+                    ],
+                    'stores' => $stores,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error al obtener las tiendas de la ruta: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

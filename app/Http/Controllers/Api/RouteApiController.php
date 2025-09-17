@@ -17,6 +17,7 @@ class RouteApiController extends Controller
     public function getCurrentRoute(Request $request)
     {
         $today = Carbon::today();
+
         $employee = Employee::where('user_id', $request->user()->id)->first();
 
         // Obtener todas las visitas programadas para hoy
@@ -43,8 +44,8 @@ class RouteApiController extends Controller
                     'id' => $visit->routeStore->store->id,
                     'name' => $visit->routeStore->store->name,
                     'address' => $visit->routeStore->store->address,
-                    'latitude' => $visit->latitude,
-                    'longitude' => $visit->longitude,
+                    'latitude' => $visit->routeStore->store->latitude,
+                    'longitude' => $visit->routeStore->store->longitude,
                     'priority' => $visit->routeStore->store->priority,
                     // Se eliminó el campo distance ya que no tenemos las coordenadas actuales
                 ],
@@ -105,6 +106,7 @@ class RouteApiController extends Controller
         $routes = RouteDetail::with(['routeStore.route', 'routeStore.store'])
             ->where('employees_id', $employee->id)
             ->whereBetween('visit_date', [$startDate, $endDate])
+            ->where('visit_date', '>', Carbon::today())
             ->orderBy('visit_date')
             ->orderBy('created_at')
             ->get()

@@ -34,6 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 	Route::get('route/{id}/stores', [RouteController::class, 'stores'])->name('route.stores');
 	Route::post('route/{id}/stores', [RouteController::class, 'addStores'])->name('route.add-stores');
 	Route::delete('route/{route}/store/{store}', [RouteController::class, 'removeStore'])->name('route.remove-store');
+	Route::get('route/{id}/map-stores', [RouteController::class, 'getRouteStores'])->name('route.map-stores');
 
 	// Rutas para el calendario (deben ir antes de las rutas de schedule)
 	Route::get('route/schedules/list', [RouteController::class, 'getSchedules'])->name('route.schedules');

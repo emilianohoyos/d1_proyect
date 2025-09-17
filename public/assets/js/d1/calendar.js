@@ -9,7 +9,7 @@ var handleRenderFullcalendar = function () {
 	var calendarElm = document.getElementById('calendar');
 	var calendar = new FullCalendar.Calendar(calendarElm, {
 		headerToolbar: {
-			left: 'dayGridMonth,timeGridWeek,timeGridDay',
+			left: 'dayGridMonth',
 			center: 'title',
 			right: 'prev,next today'
 		},
@@ -78,7 +78,7 @@ var handleRenderFullcalendar = function () {
 			// Mostrar modal con opciones
 			const date = info.event.startStr;
 			const employeeId = info.event.extendedProps.employee_id;
-			const dayScheduleUrl = `/route/schedule/day/${date}?employee=${employeeId}`;
+			
 			Info.fire({
 				title: 'Opciones de Programación',
 				html: `
@@ -87,7 +87,6 @@ var handleRenderFullcalendar = function () {
 						<strong>Ruta:</strong> ${info.event.extendedProps.route_name}<br>
 						<strong>Estado:</strong> ${info.event.extendedProps.visit_status}
 					</div>
-					<a href="${dayScheduleUrl}" class="btn btn-info btn-sm">Ver hoy</a>
 				`,
 				showCancelButton: true,
 				showDenyButton: true,
@@ -97,7 +96,8 @@ var handleRenderFullcalendar = function () {
 			}).then((result) => {
 				if (result.isConfirmed) {
 					// Redirigir a la vista de detalle
-					window.location.href = `/route/schedule/${info.event.id}/edit`;
+					const dayScheduleUrl = `/route/schedule/day/${date}?employee=${employeeId}`;
+					window.location.href = dayScheduleUrl;
 				} else if (result.isDenied) {
 					// Mostrar confirmación de eliminación
 					Confirm.fire({

@@ -26,7 +26,6 @@
 
 	@yield('outter_content')
 	@include('partial.scroll-top-btn')
-	@include('partial.theme-panel')
 	@include('partial.scripts')
 </body>
 </html>

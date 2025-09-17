@@ -18,7 +18,7 @@
                                 <th>Tienda</th>
                                 <th>Estado</th>
                                 <th>Semana</th>
-                                <th>Descripción</th>
+                                <th>Observaciones</th>
                             </tr>
                         </thead>
                         <tbody>

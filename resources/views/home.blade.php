@@ -25,7 +25,7 @@
     <!-- BEGIN calendar -->
     <div class="calendar">
         <!-- BEGIN calendar-body -->
-        <div class="calendar-body">
+        <div class="calendar-body container-fluid">
             <div id="calendar"></div>
         </div>
         <!-- END calendar-body -->

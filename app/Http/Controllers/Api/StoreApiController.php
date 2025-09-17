@@ -35,6 +35,8 @@ class StoreApiController extends Controller
             'neighborhood_id' => 'required|exists:neighborhoods,id',
             'priority' => 'nullable|integer',
             'route_id' => 'nullable|exists:routes,id',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ], [], [
             'name' => 'nombre',
             'address' => 'dirección',
@@ -47,6 +49,8 @@ class StoreApiController extends Controller
             'neighborhood_id' => 'barrio',
             'priority' => 'prioridad',
             'route_id' => 'ruta',
+            'latitude' => 'latitud',
+            'longitude' => 'longitud',
         ]);
 
         if ($validator->fails()) {
@@ -62,14 +66,31 @@ class StoreApiController extends Controller
         try {
             $route_id = $validated['route_id'];
             unset($validated['route_id']);
-            $coordinates = $this->storeController->geocodeAddress($validated['address']);
             
-            $store = DB::transaction(function () use ($validated, $coordinates) {
-                return Store::create(array_merge($validated, [
-                    'latitude' => $coordinates['lat'] ?? null,
-                    'longitude' => $coordinates['lng'] ?? null,
+            // Convertir puntos a comas en latitud y longitud
+            if (isset($validated['latitude']) && $validated['latitude'] !== null) {
+                $validated['latitude'] = str_replace('.', ',', $validated['latitude']);
+            }
+            
+            if (isset($validated['longitude']) && $validated['longitude'] !== null) {
+                $validated['longitude'] = str_replace('.', ',', $validated['longitude']);
+            }
+            
+            $store = DB::transaction(function () use ($validated) {
+                return Store::create([
+                    'name' => $validated['name'],
+                    'address' => $validated['address'],
+                    'name_charge' => $validated['name_charge'] ?? null,
+                    'phone_1' => $validated['phone_1'] ?? null,
+                    'phone_2' => $validated['phone_2'] ?? null,
+                    'email' => $validated['email'] ?? null,
                     'status' => $validated['status'] ?? true,
-                ]));
+                    'descripcion' => $validated['descripcion'] ?? null,
+                    'neighborhood_id' => $validated['neighborhood_id'],
+                    'priority' => $validated['priority'] ?? null,
+                    'latitude' => $validated['latitude'] ?? null,
+                    'longitude' => $validated['longitude'] ?? null,
+                ]);
             });
 
             if (!empty($route_id)) {

@@ -13,7 +13,6 @@
                     .prop('disabled', true);
                 $('#neighborhood_id').empty().append('<option value="">Seleccione un barrio</option>').prop(
                     'disabled', true);
-                alert(departmentId);
                 if (departmentId) {
                     $.get(`/municipalities/${departmentId}`, function(data) {
                         if (data.length > 0) {
@@ -133,6 +132,26 @@
                         <input type="text" class="form-control @error('address') is-invalid @enderror" id="address"
                             name="address" value="{{ old('address', $store->address ?? '') }}">
                         @error('address')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="latitude" class="form-label">Latitud</label>
+                        <input type="text" class="form-control @error('latitude') is-invalid @enderror" id="latitude"
+                            name="latitude" value="{{ old('latitude', isset($store->latitude) ? str_replace(',', '.', $store->latitude) : '') }}">
+                        <small class="form-text text-muted">Usar punto (.) como separador decimal</small>
+                        @error('latitude')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label for="longitude" class="form-label">Longitud</label>
+                        <input type="text" class="form-control @error('longitude') is-invalid @enderror" id="longitude"
+                            name="longitude" value="{{ old('longitude', isset($store->longitude) ? str_replace(',', '.', $store->longitude) : '') }}">
+                        <small class="form-text text-muted">Usar punto (.) como separador decimal</small>
+                        @error('longitude')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

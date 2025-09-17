@@ -1,6 +1,55 @@
 @extends('layout.default')
 @section('title', isset($store) ? 'Editar Tienda' : 'Nueva Tienda')
 
+@push('js')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Cuando cambia el departamento
+            $('#department_id').change(function() {
+                let departmentId = $(this).val();
+                $('#municipality_id').empty().append('<option value="">Seleccione un municipio</option>')
+                    .prop('disabled', true);
+                $('#neighborhood_id').empty().append('<option value="">Seleccione un barrio</option>').prop(
+                    'disabled', true);
+                if (departmentId) {
+                    $.get(`/municipalities/${departmentId}`, function(data) {
+                        if (data.length > 0) {
+                            $('#municipality_id').prop('disabled', false);
+                            $.each(data, function(key, municipality) {
+                                $('#municipality_id').append(
+                                    `<option value="${municipality.id}">${municipality.name}</option>`
+                                );
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Cuando cambia el municipio
+            $('#municipality_id').change(function() {
+                let municipalityId = $(this).val();
+                $('#neighborhood_id').empty().append('<option value="">Seleccione un barrio</option>').prop(
+                    'disabled', true);
+
+                if (municipalityId) {
+                    $.get(`/neighborhoods/${municipalityId}`, function(data) {
+                        if (data.length > 0) {
+                            $('#neighborhood_id').prop('disabled', false);
+                            $.each(data, function(key, neighborhood) {
+                                $('#neighborhood_id').append(
+                                    `<option value="${neighborhood.id}">${neighborhood.name}</option>`
+                                );
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+@endpush
+
 @section('content')
 
     <div class="card shadow">
@@ -51,14 +100,66 @@
                         @enderror
                     </div>
                     <div class="col-md-6">
+                        <label for="latitude" class="form-label">Latitud</label>
+                        <input type="text" class="form-control @error('latitude') is-invalid @enderror" id="latitude"
+                            name="latitude" value="{{ old('latitude', isset($store->latitude) ? str_replace(',', '.', $store->latitude) : '') }}">
+                        <small class="form-text text-muted">Usar punto (.) como separador decimal</small>
+                        @error('latitude')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="longitude" class="form-label">Longitud</label>
+                        <input type="text" class="form-control @error('longitude') is-invalid @enderror" id="longitude"
+                            name="longitude" value="{{ old('longitude', isset($store->longitude) ? str_replace(',', '.', $store->longitude) : '') }}">
+                        <small class="form-text text-muted">Usar punto (.) como separador decimal</small>
+                        @error('longitude')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="department_id" class="form-label">Departamento</label>
+                        <select class="form-control" id="department_id" name="department_id">
+                            <option value="">Seleccione un departamento</option>
+                            @foreach ($departments as $department)
+                                <option value="{{ $department->department_id }}" 
+                                    {{ $store->neighborhood && $store->neighborhood->municipality && $store->neighborhood->municipality->department_id == $department->department_id ? 'selected' : '' }}>
+                                    {{ $department->department_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('department_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label for="municipality_id" class="form-label">Municipio</label>
+                        <select class="form-control" id="municipality_id" name="municipality_id" {{ empty($municipalities) ? 'disabled' : '' }}>
+                            <option value="">Seleccione un municipio</option>
+                            @foreach ($municipalities as $municipality)
+                                <option value="{{ $municipality->id }}" 
+                                    {{ $store->neighborhood && $store->neighborhood->municipality_id == $municipality->id ? 'selected' : '' }}>
+                                    {{ $municipality->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('municipality_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-4">
                         <label for="neighborhood_id" class="form-label">Barrio</label>
-                        <select class="form-select @error('neighborhood_id') is-invalid @enderror" id="neighborhood_id"
-                            name="neighborhood_id">
-                            <option value="">Seleccione...</option>
+                        <select class="form-control" id="neighborhood_id" name="neighborhood_id" {{ empty($neighborhoods) ? 'disabled' : '' }}>
+                            <option value="">Seleccione un barrio</option>
                             @foreach ($neighborhoods as $neighborhood)
-                                <option value="{{ $neighborhood->id }}"
+                                <option value="{{ $neighborhood->id }}" 
                                     {{ old('neighborhood_id', $store->neighborhood_id ?? '') == $neighborhood->id ? 'selected' : '' }}>
-                                    {{ $neighborhood->name }}</option>
+                                    {{ $neighborhood->name }}
+                                </option>
                             @endforeach
                         </select>
                         @error('neighborhood_id')
