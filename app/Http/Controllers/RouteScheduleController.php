@@ -275,8 +275,8 @@ class RouteScheduleController extends Controller
             'data' => [
                 'employee' => Employee::select('id', 'name')->find($request->employee_id),
                 'date' => $request->date,
-                'start_time' => optional(optional($startPoint)->visit_date)->format('H:i:s'),
-                'end_time' => optional(optional($endPoint)->visit_date)->format('H:i:s'),
+                'start_time' => optional(optional($startPoint)->created_at)->format('H:i:s'),
+                'end_time' => optional(optional($endPoint)->created_at)->format('H:i:s'),
                 'points' => $points,
             ],
         ]);
@@ -284,7 +284,7 @@ class RouteScheduleController extends Controller
 
     public function trackingIndex()
     {
-        $latestDatesPerEmployee = LocationHistory::selectRaw('employee_id, DATE(visit_date) as visit_day, MAX(visit_date) as latest_visit_at')
+        $latestDatesPerEmployee = LocationHistory::selectRaw('employee_id, DATE(visit_date) as visit_day, MAX(created_at) as latest_visit_at')
             ->whereNotNull('visit_date')
             ->groupBy('employee_id', DB::raw('DATE(visit_date)'))
             ->orderByDesc('latest_visit_at')
@@ -303,7 +303,7 @@ class RouteScheduleController extends Controller
 
             $dayLocations = LocationHistory::where('employee_id', $row->employee_id)
                 ->whereDate('visit_date', $row->visit_day)
-                ->orderBy('visit_date')
+                ->orderBy('created_at')
                 ->get();
 
             $start = $dayLocations->firstWhere('transaction_type', 'inicio') ?? $dayLocations->first();
@@ -313,8 +313,8 @@ class RouteScheduleController extends Controller
                 'employee_id' => $row->employee_id,
                 'employee_name' => $employee->name ?? 'Sin nombre',
                 'visit_date' => $row->visit_day,
-                'start_time' => optional(optional($start)->visit_date)->format('H:i:s') ?? '-',
-                'end_time' => optional(optional($end)->visit_date)->format('H:i:s') ?? '-',
+                'start_time' => optional(optional($start)->created_at)->format('H:i:s') ?? '-',
+                'end_time' => optional(optional($end)->created_at)->format('H:i:s') ?? '-',
             ];
         });
 

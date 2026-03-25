@@ -42,7 +42,16 @@
                     const lng = parseFloat((point.longitude ?? '').toString().replace(',', '.'));
 
                     if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
-                        const marker = L.marker([lat, lng]).addTo(map);
+                        const markerColor = point.transaction_type === 'inicio'
+                            ? 'green'
+                            : (point.transaction_type === 'final' ? 'red' : 'blue');
+                        const marker = L.circleMarker([lat, lng], {
+                            radius: 7,
+                            color: markerColor,
+                            fillColor: markerColor,
+                            fillOpacity: 0.9,
+                            weight: 2,
+                        }).addTo(map);
                         marker.bindPopup(`#${index + 1}<br>${point.visit_date ?? ''}<br>${point.transaction_type ?? ''}`);
                         markers.push(marker);
                         latlngs.push([lat, lng]);
