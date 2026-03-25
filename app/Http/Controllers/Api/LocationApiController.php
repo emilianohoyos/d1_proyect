@@ -20,6 +20,7 @@ class LocationApiController extends Controller
             'latitude' => 'required|string|max:45',
             'longitude' => 'required|string|max:45',
             'employee_id' => 'required|exists:employees,id',
+            'transaction_type' => 'required|string|in:inicio,seguimiento,final',
         ]);
 
         if ($validator->fails()) {
@@ -30,12 +31,15 @@ class LocationApiController extends Controller
             ], 422);
         }
 
+       
+
         try {
             $location = LocationHistory::create([
-                'latitud' => $request->latitude,
-                'longitud' => $request->longitude,
-                'visit_date' => now(),
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'visit_date' => now()->toDateString(),
                 'employee_id' => $request->employee_id,
+                'transaction_type' => $request->transaction_type,
             ]);
 
             return response()->json([
@@ -43,8 +47,13 @@ class LocationApiController extends Controller
                 'message' => 'Ubicación guardada correctamente',
                 'data' => [
                     'id' => $location->id,
+                    'latitude' => $location->latitude,
+                    'longitude' => $location->longitude,
+                    'employee_id' => $location->employee_id,
+                    'transaction_type' => $location->transaction_type,
                     'visit_date' => $location->visit_date,
                     'created_at' => $location->created_at,
+                    'updated_at' => $location->updated_at,
                 ]
             ], 201);
         } catch (\Exception $e) {
@@ -87,8 +96,8 @@ class LocationApiController extends Controller
             'data' => $locations->map(function ($location) {
                 return [
                     'id' => $location->id,
-                    'latitude' => $location->latitud,
-                    'longitude' => $location->longitud,
+                    'latitude' => $location->latitude,
+                    'longitude' => $location->longitude,
                     'visit_date' => $location->visit_date,
                     'route_details_stores_id' => $location->route_details_stores_id,
                     'created_at' => $location->created_at,

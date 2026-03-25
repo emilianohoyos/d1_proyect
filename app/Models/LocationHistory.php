@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class LocationHistory extends Model
 {
     protected $fillable = [
-        'latitud',
-        'longitud',
+        'latitude',
+        'longitude',
         'visit_date',
-        'employee_id'
+        'employee_id',
+        'transaction_type'
     ];
 
     protected $casts = [

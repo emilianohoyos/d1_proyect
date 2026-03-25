@@ -43,7 +43,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 	Route::get('route-schedule/create', [RouteScheduleController::class, 'create'])->name('route.schedule.create');
 	Route::post('route-schedule', [RouteScheduleController::class, 'store'])->name('route.schedule.store');
 	Route::get('route-schedule/search', [RouteScheduleController::class, 'search'])->name('route.schedule.search');
+	Route::get('route-schedule/history-map', [RouteScheduleController::class, 'historyMap'])->name('route.schedule.history-map');
 	Route::get('route-schedule/results', [RouteScheduleController::class, 'results'])->name('route.schedule.results');
+	Route::get('route-schedule/tracking', [RouteScheduleController::class, 'trackingIndex'])->name('route.schedule.tracking');
 	Route::delete('route-schedule/{id}', [RouteScheduleController::class, 'delete'])->name('route.schedule.delete');
 	Route::get('route/schedule/{id}/edit', [RouteController::class, 'editSchedule'])->name('route.schedule.edit');
 	Route::put('route/schedule/{id}', [RouteController::class, 'updateSchedule'])->name('route.schedule.update');

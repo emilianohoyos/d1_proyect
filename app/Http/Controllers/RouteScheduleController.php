@@ -6,6 +6,7 @@ use App\Models\Route;
 use App\Models\Employee;
 use App\Models\RouteDetail;
 use App\Models\RouteStore;
+use App\Models\LocationHistory;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -238,5 +239,85 @@ class RouteScheduleController extends Controller
         $schedules = $query->orderBy('week')->orderBy('route_store_id')->get();
 
         return view('route.schedule-day', compact('schedules', 'date', 'employeeId'));
+    }
+
+    public function historyMap(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|exists:employees,id',
+            'date' => 'required|date_format:Y-m-d',
+        ]);
+
+        $locations = LocationHistory::where('employee_id', $request->employee_id)
+            ->whereDate('visit_date', $request->date)
+            ->orderBy('visit_date')
+            ->get();
+
+        $points = $locations->map(function ($item) {
+            $lat = $item->latitud ?? $item->latitude ?? null;
+            $lng = $item->longitud ?? $item->longitude ?? null;
+
+            return [
+                'latitude' => $lat,
+                'longitude' => $lng,
+                'visit_date' => optional($item->visit_date)->format('Y-m-d H:i:s'),
+                'transaction_type' => $item->transaction_type,
+            ];
+        })->filter(function ($point) {
+            return !empty($point['latitude']) && !empty($point['longitude']);
+        })->values();
+
+        $startPoint = $locations->firstWhere('transaction_type', 'inicio') ?? $locations->first();
+        $endPoint = $locations->firstWhere('transaction_type', 'final') ?? $locations->last();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'employee' => Employee::select('id', 'name')->find($request->employee_id),
+                'date' => $request->date,
+                'start_time' => optional(optional($startPoint)->visit_date)->format('H:i:s'),
+                'end_time' => optional(optional($endPoint)->visit_date)->format('H:i:s'),
+                'points' => $points,
+            ],
+        ]);
+    }
+
+    public function trackingIndex()
+    {
+        $latestDatesPerEmployee = LocationHistory::selectRaw('employee_id, DATE(visit_date) as visit_day, MAX(visit_date) as latest_visit_at')
+            ->whereNotNull('visit_date')
+            ->groupBy('employee_id', DB::raw('DATE(visit_date)'))
+            ->orderByDesc('latest_visit_at')
+            ->get()
+            ->groupBy('employee_id')
+            ->map(function ($items) {
+                return $items->first();
+            })
+            ->values();
+
+        $employeeIds = $latestDatesPerEmployee->pluck('employee_id')->filter()->all();
+        $employees = Employee::whereIn('id', $employeeIds)->get()->keyBy('id');
+
+        $trackingRows = $latestDatesPerEmployee->map(function ($row) use ($employees) {
+            $employee = $employees->get($row->employee_id);
+
+            $dayLocations = LocationHistory::where('employee_id', $row->employee_id)
+                ->whereDate('visit_date', $row->visit_day)
+                ->orderBy('visit_date')
+                ->get();
+
+            $start = $dayLocations->firstWhere('transaction_type', 'inicio') ?? $dayLocations->first();
+            $end = $dayLocations->firstWhere('transaction_type', 'final') ?? $dayLocations->last();
+
+            return [
+                'employee_id' => $row->employee_id,
+                'employee_name' => $employee->name ?? 'Sin nombre',
+                'visit_date' => $row->visit_day,
+                'start_time' => optional(optional($start)->visit_date)->format('H:i:s') ?? '-',
+                'end_time' => optional(optional($end)->visit_date)->format('H:i:s') ?? '-',
+            ];
+        });
+
+        return view('route.tracking-index', compact('trackingRows'));
     }
 }

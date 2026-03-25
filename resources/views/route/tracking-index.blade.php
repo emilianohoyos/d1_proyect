@@ -1,5 +1,5 @@
 @extends('layout.default')
-@section('title', 'Programación del día ' . $date)
+@section('title', 'Seguimiento')
 
 @push('css')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -57,7 +57,8 @@
                 }
             }
 
-            async function loadHistoryMap(employeeId, date) {
+            async function loadHistoryMap(employeeId, date, employeeName) {
+                document.getElementById('historyMapModalLabel').textContent = `Seguimiento de ${employeeName}`;
                 document.getElementById('history-meta').innerHTML = 'Cargando...';
                 document.getElementById('history-map').innerHTML = '<div class="d-flex justify-content-center align-items-center h-100"><div class="spinner-border text-primary" role="status"></div></div>';
 
@@ -74,6 +75,7 @@
                     document.getElementById('history-map').innerHTML = '';
                     document.getElementById('history-meta').innerHTML = `
                         <span class="badge bg-primary me-2">Empleado: ${info.employee?.name ?? '-'}</span>
+                        <span class="badge bg-secondary me-2">Fecha: ${info.date ?? '-'}</span>
                         <span class="badge bg-success me-2">Inicio: ${info.start_time ?? '-'}</span>
                         <span class="badge bg-danger">Fin: ${info.end_time ?? '-'}</span>
                     `;
@@ -93,7 +95,8 @@
                 button.addEventListener('click', function() {
                     const employeeId = this.getAttribute('data-employee-id');
                     const date = this.getAttribute('data-date');
-                    loadHistoryMap(employeeId, date);
+                    const employeeName = this.getAttribute('data-employee-name');
+                    loadHistoryMap(employeeId, date, employeeName);
                 });
             });
 
@@ -110,47 +113,48 @@
 @section('content')
     <div class="card shadow">
         <div class="card-header text-white">
-            <h4 class="mb-0">Programación del día {{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}</h4>
+            <h4 class="mb-0">Seguimiento por empleado</h4>
         </div>
         <div class="card-body">
-            <a href="{{ url()->previous() }}" class="btn btn-secondary mb-3">Regresar</a>
-            @if ($schedules->count())
-                <h5>Empleado: {{ $schedules->first()->employee->name ?? '-' }}</h5>
-                <h6>Ruta: {{ $schedules->first()->routeStore->route->name ?? '-' }}</h6>
-                <button
-                    type="button"
-                    class="btn btn-outline-primary btn-sm mb-3 view-history-map"
-                    data-bs-toggle="modal"
-                    data-bs-target="#historyMapModal"
-                    data-employee-id="{{ $employeeId ?? optional($schedules->first())->employees_id }}"
-                    data-date="{{ $date }}"
-                >
-                    Ver seguimiento del día
-                </button>
+            @if ($trackingRows->isEmpty())
+                <div class="alert alert-info mb-0">No hay historial de ubicaciones para mostrar.</div>
+            @else
                 <div class="table-responsive">
-                    <table class="table table-bordered">
+                    <table class="table table-bordered table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th>Tienda</th>
-                                <th>Estado</th>
-                                <th>Semana</th>
-                                <th>Observaciones</th>
+                                <th>Empleado</th>
+                                <th>Fecha</th>
+                                <th>Hora inicio</th>
+                                <th>Hora fin</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($schedules as $detail)
+                            @foreach ($trackingRows as $row)
                                 <tr>
-                                    <td>{{ $detail->routeStore->store->name ?? '-' }}</td>
-                                    <td>{{ $detail->visit_status }}</td>
-                                    <td>{{ $detail->week }}</td>
-                                    <td>{{ $detail->description }}</td>
+                                    <td>{{ $row['employee_name'] }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($row['visit_date'])->format('d/m/Y') }}</td>
+                                    <td>{{ $row['start_time'] }}</td>
+                                    <td>{{ $row['end_time'] }}</td>
+                                    <td>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-outline-primary view-history-map"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#historyMapModal"
+                                            data-employee-id="{{ $row['employee_id'] }}"
+                                            data-date="{{ $row['visit_date'] }}"
+                                            data-employee-name="{{ $row['employee_name'] }}"
+                                        >
+                                            Ver recorrido
+                                        </button>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
-            @else
-                <div class="alert alert-info">No hay programación para este día</div>
             @endif
         </div>
     </div>
@@ -159,7 +163,7 @@
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="historyMapModalLabel">Seguimiento del día</h5>
+                    <h5 class="modal-title" id="historyMapModalLabel">Seguimiento</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">

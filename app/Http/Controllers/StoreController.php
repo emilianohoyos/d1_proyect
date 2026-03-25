@@ -19,7 +19,9 @@ class StoreController extends Controller
     {
         // dd($coordinates = $this->geocodeAddress("Dg. 80 #76-47"));
 
-        $stores = Store::with('neighborhood')->get();
+        $stores = Store::with('neighborhood')
+            ->orderByDesc('id')
+            ->get();
         return view('store.index', compact('stores'));
     }
 
@@ -159,6 +161,7 @@ class StoreController extends Controller
             $store = Store::findOrFail($id);
 
             DB::transaction(function () use ($store, $validated) {
+                $validated['is_new'] = false;
                 $store->update($validated);
             });
 

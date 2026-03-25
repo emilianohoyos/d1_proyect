@@ -114,6 +114,10 @@ return [
           'url' => '/route-schedule/search',
           'text' => 'Listar'
         ],
+        [
+          'url' => '/route-schedule/tracking',
+          'text' => 'Seguimiento'
+        ],
 
       ]
     ],

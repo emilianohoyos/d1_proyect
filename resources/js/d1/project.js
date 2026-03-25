@@ -3,6 +3,7 @@ var handleRenderTableData = function () {
         var table = $('#table-default').DataTable({
             lengthMenu: [10, 20, 30, 40, 50],
             responsive: true,
+            order: [[0, 'desc']],
             buttons: [
                 { extend: 'print', className: 'btn btn-default btn-sm', text: 'Imprimir' },
                 { extend: 'csv', className: 'btn btn-default btn-sm', text: 'Exportar CSV' }

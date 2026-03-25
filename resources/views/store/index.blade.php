@@ -72,6 +72,7 @@
                             <th>Email</th>
                             <th>Barrio</th>
                             <th>Estado</th>
+                            <th>Nuevo</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -92,6 +93,13 @@
                                         <span class="badge bg-success">Activo</span>
                                     @else
                                         <span class="badge bg-secondary">Inactivo</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($store->is_new)
+                                        <span class="badge bg-info">Si</span>
+                                    @else
+                                        <span class="badge bg-light text-dark">No</span>
                                     @endif
                                 </td>
                                 <td>

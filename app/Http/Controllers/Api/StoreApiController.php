@@ -85,9 +85,10 @@ class StoreApiController extends Controller
                     'phone_2' => $validated['phone_2'] ?? null,
                     'email' => $validated['email'] ?? null,
                     'status' => $validated['status'] ?? true,
+                    'is_new' => true,
                     'descripcion' => $validated['descripcion'] ?? null,
                     'neighborhood_id' => $validated['neighborhood_id'],
-                    'priority' => $validated['priority'] ?? null,
+                    'priority' => 0,
                     'latitude' => $validated['latitude'] ?? null,
                     'longitude' => $validated['longitude'] ?? null,
                 ]);

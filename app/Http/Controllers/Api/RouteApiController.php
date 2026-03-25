@@ -44,8 +44,8 @@ class RouteApiController extends Controller
                     'id' => $visit->routeStore->store->id,
                     'name' => $visit->routeStore->store->name,
                     'address' => $visit->routeStore->store->address,
-                    'latitude' => $visit->routeStore->store->latitude,
-                    'longitude' => $visit->routeStore->store->longitude,
+                    'latitude' => str_replace(',', '.', $visit->routeStore->store->latitude),
+                    'longitude' => str_replace(',', '.', $visit->routeStore->store->longitude),
                     'priority' => $visit->routeStore->store->priority,
                     // Se eliminó el campo distance ya que no tenemos las coordenadas actuales
                 ],
@@ -166,8 +166,7 @@ class RouteApiController extends Controller
             'status' => 'required|in:pendiente,completada,cancelada',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'description' => 'nullable|string|max:45',
-            'is_purchase' => 'required|in:si,no',
+            'description' => 'nullable|string|max:45'
         ]);
 
         if ($validator->fails()) {
