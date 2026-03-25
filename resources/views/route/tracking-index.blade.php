@@ -129,13 +129,14 @@
                 <div class="alert alert-info mb-0">No hay historial de ubicaciones para mostrar.</div>
             @else
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle mb-0">
+                    <table id="table-default" class="table table-bordered table-hover align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Empleado</th>
                                 <th>Fecha</th>
                                 <th>Hora inicio</th>
                                 <th>Hora fin</th>
+                                <th>Seguimientos</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -146,6 +147,7 @@
                                     <td>{{ \Carbon\Carbon::parse($row['visit_date'])->format('d/m/Y') }}</td>
                                     <td>{{ $row['start_time'] }}</td>
                                     <td>{{ $row['end_time'] }}</td>
+                                    <td>{{ $row['tracking_count'] }}</td>
                                     <td>
                                         <button
                                             type="button"

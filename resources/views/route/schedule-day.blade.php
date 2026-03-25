@@ -84,7 +84,8 @@
                     document.getElementById('history-meta').innerHTML = `
                         <span class="badge bg-primary me-2">Empleado: ${info.employee?.name ?? '-'}</span>
                         <span class="badge bg-success me-2">Inicio: ${info.start_time ?? '-'}</span>
-                        <span class="badge bg-danger">Fin: ${info.end_time ?? '-'}</span>
+                        <span class="badge bg-danger me-2">Fin: ${info.end_time ?? '-'}</span>
+                        <span class="badge bg-info">Seguimientos: ${info.tracking_count ?? 0}</span>
                     `;
 
                     if (!info.points || info.points.length === 0) {

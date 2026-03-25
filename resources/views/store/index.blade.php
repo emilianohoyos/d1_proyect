@@ -125,8 +125,7 @@
                                         </button>
                                     </form>
                                     <form action="{{ route('store.destroy', $store->id) }}" method="POST"
-                                        class="d-inline delete-form"
-                                        onsubmit="return confirm('¿Seguro que deseas eliminar esta tienda?')">
+                                        class="d-inline delete-form">
                                         @csrf
                                         @method('DELETE')
                                         <button class="btn btn-sm btn-danger" type="submit">Eliminar</button>

@@ -269,6 +269,7 @@ class RouteScheduleController extends Controller
 
         $startPoint = $locations->firstWhere('transaction_type', 'inicio') ?? $locations->first();
         $endPoint = $locations->firstWhere('transaction_type', 'final') ?? $locations->last();
+        $trackingPoints = $locations->where('transaction_type', 'seguimiento')->values();
 
         return response()->json([
             'status' => 'success',
@@ -277,6 +278,10 @@ class RouteScheduleController extends Controller
                 'date' => $request->date,
                 'start_time' => optional(optional($startPoint)->created_at)->format('H:i:s'),
                 'end_time' => optional(optional($endPoint)->created_at)->format('H:i:s'),
+                'tracking_count' => $trackingPoints->count(),
+                'tracking_times' => $trackingPoints->map(function ($point) {
+                    return optional($point->created_at)->format('H:i:s');
+                })->values(),
                 'points' => $points,
             ],
         ]);
@@ -308,6 +313,7 @@ class RouteScheduleController extends Controller
 
             $start = $dayLocations->firstWhere('transaction_type', 'inicio') ?? $dayLocations->first();
             $end = $dayLocations->firstWhere('transaction_type', 'final') ?? $dayLocations->last();
+            $trackingCount = $dayLocations->where('transaction_type', 'seguimiento')->count();
 
             return [
                 'employee_id' => $row->employee_id,
@@ -315,6 +321,7 @@ class RouteScheduleController extends Controller
                 'visit_date' => $row->visit_day,
                 'start_time' => optional(optional($start)->created_at)->format('H:i:s') ?? '-',
                 'end_time' => optional(optional($end)->created_at)->format('H:i:s') ?? '-',
+                'tracking_count' => $trackingCount,
             ];
         });
 
