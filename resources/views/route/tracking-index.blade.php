@@ -52,7 +52,7 @@
                             fillOpacity: 0.9,
                             weight: 2,
                         }).addTo(map);
-                        marker.bindPopup(`#${index + 1}<br>${point.visit_date ?? ''}<br>${point.transaction_type ?? ''}`);
+                        marker.bindPopup(`#${index + 1} — ${point.transaction_type ?? ''}<br>${point.time ?? ''}`);
                         markers.push(marker);
                         latlngs.push([lat, lng]);
                     }

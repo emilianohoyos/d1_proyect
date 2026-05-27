@@ -250,7 +250,7 @@ class RouteScheduleController extends Controller
 
         $locations = LocationHistory::where('employee_id', $request->employee_id)
             ->whereDate('visit_date', $request->date)
-            ->orderBy('visit_date')
+            ->orderBy('created_at')
             ->get();
 
         $points = $locations->map(function ($item) {
@@ -260,7 +260,7 @@ class RouteScheduleController extends Controller
             return [
                 'latitude' => $lat,
                 'longitude' => $lng,
-                'visit_date' => optional($item->visit_date)->format('Y-m-d H:i:s'),
+                'time' => optional($item->created_at)->format('H:i:s'),
                 'transaction_type' => $item->transaction_type,
             ];
         })->filter(function ($point) {
@@ -289,21 +289,16 @@ class RouteScheduleController extends Controller
 
     public function trackingIndex()
     {
-        $latestDatesPerEmployee = LocationHistory::selectRaw('employee_id, DATE(visit_date) as visit_day, MAX(created_at) as latest_visit_at')
+        $trackingDays = LocationHistory::selectRaw('employee_id, DATE(visit_date) as visit_day, MAX(created_at) as latest_visit_at')
             ->whereNotNull('visit_date')
             ->groupBy('employee_id', DB::raw('DATE(visit_date)'))
             ->orderByDesc('latest_visit_at')
-            ->get()
-            ->groupBy('employee_id')
-            ->map(function ($items) {
-                return $items->first();
-            })
-            ->values();
+            ->get();
 
-        $employeeIds = $latestDatesPerEmployee->pluck('employee_id')->filter()->all();
+        $employeeIds = $trackingDays->pluck('employee_id')->filter()->all();
         $employees = Employee::whereIn('id', $employeeIds)->get()->keyBy('id');
 
-        $trackingRows = $latestDatesPerEmployee->map(function ($row) use ($employees) {
+        $trackingRows = $trackingDays->map(function ($row) use ($employees) {
             $employee = $employees->get($row->employee_id);
 
             $dayLocations = LocationHistory::where('employee_id', $row->employee_id)
